@@ -24,15 +24,65 @@ import config as cf
 import model
 import csv
 
+"""
+El controlador se encarga de mediar entre la vista y el modelo
+"""
 
-"""
-El controlador se encarga de mediar entre la vista y el modelo.
-"""
 
 # Inicialización del Catálogo de libros
 
+def initCatalog():
+    """
+    Llama la funcion de inicializacion del catalogo del modelo
+    """
+    catalog = model.newCatalog()
+    return catalog
+
+
 # Funciones para la carga de datos
+
+def loadData(catalog):
+    """
+    Carga los datos de los archivos y carga los datos en la estructura de datos
+    """
+    loadArtists(catalog)
+    loadArtworks(catalog)
+
+
+def loadArtists(catalog):
+    """
+    Carga todos los artistas del archivo al catalago del MoMA
+    """
+    artistfile = cf.data_dir + "MoMA/Artists-utf8-small.csv"
+    input_file = csv.DictReader(open(artistfile, encoding="utf-8"))
+    for artist in input_file:
+        model.addArtist(catalog, artist)
+
+
+def loadArtworks(catalog):
+    """
+    Carga todas las obras del archivo al catalago del MoMA
+    """
+    artworkfile = cf.data_dir + "MoMA/Artworks-utf8-small.csv"
+    input_file = csv.DictReader(open(artworkfile, encoding="utf-8"))
+    for artwork in input_file:
+        model.addArtwork(catalog, artwork)
+
 
 # Funciones de ordenamiento
 
+def sortDateArtworks(artworks, sizeArtworks):
+    """
+    Ordena las obras por la fecha de la obra
+    """
+    return model.sortDateArtworks(artworks, sizeArtworks)
+
+
 # Funciones de consulta sobre el catálogo
+
+def getArworksbyMedium(catalog, mediumName):
+    """
+    Retorna todas las obras dada una tecnica
+    """
+    mediumInfo = model.getArworksbyMedium(catalog, mediumName)
+    return mediumInfo
