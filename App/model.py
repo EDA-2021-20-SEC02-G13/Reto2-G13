@@ -131,12 +131,14 @@ def cmpArtworkByDate(artwork1, artwork2):
         artwork2: informacion de la segunda obra que incluye
                   su valor "TransCost"
     """
-    date1 = artwork1["Date"]
-    date2 = artwork2["Date"]
-    if date1 == "":
-        date1 = "2099"
-    if date2 == "":
-        date1 = "2099"
+    if artwork1["Date"] == "":
+        date1 = 2099
+    else:
+        date1 = int(artwork1["Date"])
+    if artwork2["Date"] == "":
+        date2 = 2099
+    else:
+        date2 = int(artwork2["Date"])
     return date1 < date2
 
 
