@@ -1,4 +1,4 @@
-﻿"""
+"""
  * Copyright 2020, Departamento de sistemas y Computación,
  * Universidad de Los Andes
  *
@@ -45,7 +45,7 @@ def newCatalog():
     """
     catalog = {"artists": None,
                "artworks": None,
-               "medium": None}
+               "mediums": None}
 
     catalog["artists"] = lt.newList("SINGLE_LINKED")
 
@@ -75,7 +75,6 @@ def addArtwork(catalog, artwork):
     informacion de dicha obra
     """
     lt.addLast(catalog["artworks"], artwork)
-    addArtworkMedium(catalog, artwork["Medium"], artwork)
 
 
 def addArtworkMedium(catalog, medium, artwork):
@@ -103,11 +102,57 @@ def newMedium(medium):
     tecnica = {"medium": "",
                "artworks": None}
     tecnica["medium"] = medium
-    tecnica["artworks"] = lt.newList('SINGLE_LINKED')
+    tecnica["artworks"] = lt.newList("SINGLE_LINKED")
     return tecnica
 
 
 # Funciones de consulta
+
+def constituentID(nombre, catalog):
+    """
+    Busca el ConstituentID de un artista, considerando el nombre dado
+    """
+    consID = None
+    for artist in lt.iterator(catalog["artists"]):
+        if nombre == artist["DisplayName"]:
+            consID = artist["ConstituentID"]
+            break
+    return consID
+
+
+def artistArtworks(constituentID, catalog):
+    """
+    Obtiene todas las obras de un artista y las almacena en un mapa de tecnicas
+    """
+    for artwork in lt.iterator(catalog["artworks"]):
+        id = artwork["ConstituentID"]
+        id = id.replace("[", "").replace("]", "").split(", ")
+        for artista in id:
+            if constituentID == artista:
+                addArtworkMedium(catalog, artwork["Medium"], artwork)
+    return catalog["mediums"]
+
+
+def artistMedium(mapTecnicas):
+    """
+    Identifica la tecnica más utilizada en las obras de un artista, el numero
+    total de tecnicas distintas que se usaron, y el numero total de obras
+    """
+    mayor = 0
+    total = 0
+    maximo = ""
+    distintas = mp.size(mapTecnicas)
+    tecnicas = mp.keySet(mapTecnicas)
+    for tecnica in lt.iterator(tecnicas):
+        pareja = mp.get(mapTecnicas, tecnica)
+        obras = pareja["value"]["artworks"]
+        cantObras = lt.size(obras)
+        total += cantObras
+        if cantObras > mayor:
+            maximo = tecnica
+            mayor = cantObras
+    return maximo, distintas, total
+
 
 def getArworksbyMedium(catalog, mediumName):
     """

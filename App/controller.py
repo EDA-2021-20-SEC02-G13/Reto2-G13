@@ -80,6 +80,28 @@ def sortDateArtworks(artworks, sizeArtworks):
 
 # Funciones de consulta sobre el catálogo
 
+def constituentID(nombre, catalog):
+    """
+    Busca el ConstituentID de un artista, considerando el nombre dado
+    """
+    return model.constituentID(nombre, catalog)
+
+
+def artistArtworks(constituentID, catalog):
+    """
+    Obtiene todas las obras de un artista y las almacena en un mapa de tecnicas
+    """
+    return model.artistArtworks(constituentID, catalog)
+
+
+def artistMedium(mapTecnicas):
+    """
+    Identifica la tecnica más utilizada en las obras de un artista, el numero
+    total de tecnicas distintas que se usaron, y el numero total de obras
+    """
+    return model.artistMedium(mapTecnicas)
+
+
 def getArworksbyMedium(catalog, mediumName):
     """
     Retorna todas las obras dada una tecnica

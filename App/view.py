@@ -1,4 +1,4 @@
-﻿"""
+"""
  * Copyright 2020, Departamento de sistemas y Computación, Universidad
  * de Los Andes
  *
@@ -22,6 +22,7 @@
 
 from prettytable import PrettyTable, ALL
 import config as cf
+import time
 import sys
 import controller
 from DISClib.ADT import list as lt
@@ -37,21 +38,54 @@ operación solicitada
 
 # Funciones para la impresión de resultados
 
-def printArtworksByMedium(sortMedium, cantObras):
+def printCargaArchivos(catalog, sizeArtists, sizeArtworks):
     """
-    Imprime la informacion del requerimiento n obras de
+    Imprime los datos requeridos para la carga de archivos
     """
-    tableSortMedium = PrettyTable(["ObjectID", "Titulo", "Fecha", "Tecnica"])
-    i = 1
-    while i <= cantObras:
-        artwork = lt.getElement(sortMedium, i)
-        tableSortMedium.add_row([artwork["ObjectID"], artwork["Title"],
-                                 artwork["Date"], artwork["Medium"]])
-        i += 1
-    tableSortMedium.max_width = 40
-    tableSortMedium.hrules = ALL
-    print("\n" + "-"*23 + " Req n. Answer " + "-"*24)
-    print(tableSortMedium)
+    print("-"*62)
+    print("Artistas cargados: " + str(sizeArtists))
+    print("Obras cargadas: " + str(sizeArtworks))
+    print("-"*62)
+    for pos in range(sizeArtists-2, sizeArtists+1):
+        print(lt.getElement(catalog["artists"], pos))
+    for pos2 in range(sizeArtworks-2, sizeArtworks+1):
+        print(lt.getElement(catalog["artworks"], pos2))
+    print("-"*62)
+
+
+def printArtistArtworks(obras, nombre, constituentID, tecnicas):
+    """
+    Imprime los datos requeridos para el requerimiento 3
+    """
+    tableObras = PrettyTable(["Titulo", "Fecha", "Medio", "Dimensiones"])
+    size = lt.size(obras)
+    for pos in range(1, 4):
+        obra = lt.getElement(obras, pos)
+        tableObras.add_row([obra["Title"], obra["Date"], obra["Medium"],
+                            obra["Dimensions"]])
+    if size == 4:
+        obra = lt.getElement(obras, size)
+        tableObras.add_row([obra["Title"], obra["Date"], obra["Medium"],
+                            obra["Dimensions"]])
+    elif size == 5:
+        for pos in range(size-1, size+1):
+            obra = lt.getElement(obras, pos)
+            tableObras.add_row([obra["Title"], obra["Date"], obra["Medium"],
+                                obra["Dimensions"]])
+    elif size > 5:
+        for pos in range(size-2, size+1):
+            obra = lt.getElement(obras, pos)
+            tableObras.add_row([obra["Title"], obra["Date"], obra["Medium"],
+                                obra["Dimensions"]])
+    tableObras.max_width = 40
+    tableObras.hrules = ALL
+    print("\n" + "-"*23 + " Req 3. Answer " + "-"*24)
+    print(nombre + " con ID " + constituentID + ", tiene " +
+          str(tecnicas[2]) + " piezas artisticas en el MoMA.")
+    print("El/la artista utilizó " + str(tecnicas[1]) + " técnicas distintas.")
+    print("\n" + "La técnica que más se utilizó fue " + tecnicas[0] +
+          ". A continuación se muestra el listado de obras con dicha técnica.")
+    print(tableObras)
 
 
 # Menu de opciones
@@ -59,7 +93,14 @@ def printArtworksByMedium(sortMedium, cantObras):
 def printMenu():
     print("\n" + "-"*20 + " Bienvenido al Reto 2 " + "-"*20)
     print("0 - Cargar información en el catálogo")
-    print("1 - Las n obras mas antiguas para un medio especifico")
+    print("1 - Req 1. Listar cronológicamente a los artistas")
+    print("2 - Req 2. Listar cronológicamente a las adquisiciones")
+    print("3 - Req 3. Clasificar las obras de un artista por técnica")
+    print("4 - Req 4. Clasificar las obras por la nacionalidad de sus"
+          " creadores")
+    print("5 - Req 5. Transportar obras de un departamento")
+    print("6 - Bono. Encontrar los artistas mas prolificos del museo")
+    print("7 - Salir de la aplicación")
     print("-"*62)
 
 
@@ -88,24 +129,48 @@ Menu principal
 """
 while True:
     printMenu()
-    inputs = input('Seleccione una opción para continuar: ')
+    inputs = input("Seleccione una opción para continuar: ")
+
     if int(inputs[0]) == 0:
         print("-"*61)
         print("Cargando información de los archivos ....")
+        start_time = time.process_time()
         catalog = initCatalog()
         loadData(catalog)
-        print("-"*61)
+        sizeArtists = lt.size(catalog["artists"])
+        sizeArtworks = lt.size(catalog["artworks"])
+        stop_time = time.process_time()
+        elapsed_time_mseg = round((stop_time - start_time)*1000, 2)
+        print("Tiempo:", elapsed_time_mseg, "mseg")
+        printCargaArchivos(catalog, sizeArtists, sizeArtworks)
 
     elif int(inputs[0]) == 1:
-        print("\n" + "-"*23 + " Req n. Inputs " + "-"*24)
-        mediumName = input("Indique la tecnica que desea buscar: ")
-        mediumMap = controller.getArworksbyMedium(catalog, mediumName)
-        mediumArt = mediumMap["artworks"]
-        sizeMedium = lt.size(mediumArt)
-        sortMedium = controller.sortDateArtworks(mediumArt, sizeMedium)
-        cantObras = input("Indique la cantidad de obras antiguas a imprimir "
-                          "(menor o igual a " + str(sizeMedium) + "): ")
-        printArtworksByMedium(sortMedium, int(cantObras))
+        pass
+
+    elif int(inputs[0]) == 2:
+        pass
+
+    elif int(inputs[0]) == 3:
+        print("\n" + "-"*23 + " Req 3. Inputs " + "-"*24)
+        nombre = str(input("Indique el nombre del artista: "))
+        start_time = time.process_time()
+        constituentID = controller.constituentID(nombre, catalog)
+        mapTecnicas = controller.artistArtworks(constituentID, catalog)
+        tecnicas = controller.artistMedium(mapTecnicas)
+        obras = controller.getArworksbyMedium(catalog, tecnicas[0])
+        stop_time = time.process_time()
+        elapsed_time_mseg = round((stop_time - start_time)*1000, 2)
+        print("Tiempo:", elapsed_time_mseg, "mseg")
+        printArtistArtworks(obras["artworks"], nombre, constituentID, tecnicas)
+
+    elif int(inputs[0]) == 4:
+        pass
+
+    elif int(inputs[0]) == 5:
+        pass
+
+    elif int(inputs[0]) == 6:
+        pass
 
     else:
         sys.exit(0)
