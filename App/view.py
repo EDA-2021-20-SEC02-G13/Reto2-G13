@@ -178,8 +178,12 @@ while True:
     elif int(inputs[0]) == 9:
         print("\n" + "-"*23 + " Req n. Inputs " + "-"*24)
         nationalityName = input("Indique la nacionalidad que desea buscar: ")
+        start_time = time.process_time()
         natDict = controller.getArworksbyNationality(catalog, nationalityName)
         cantidad = lt.size(natDict["artworks"])
+        stop_time = time.process_time()
+        elapsed_time_mseg = round((stop_time - start_time)*1000, 2)
+        print("Tiempo:", elapsed_time_mseg, "mseg")
         print("\n" + "-"*23 + " Req n. Answer " + "-"*24)
         print("Hay " + str(cantidad) + " obras para la nacionalidad "
               + nationalityName)
