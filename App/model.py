@@ -56,6 +56,11 @@ def newCatalog():
                                    loadfactor=0.5,
                                    comparefunction=compareMedium)
 
+    catalog["nationalities"] = mp.newMap(119,
+                                         maptype="PROBING",
+                                         loadfactor=0.5,
+                                         comparefunction=compareMedium)
+
     return catalog
 
 
@@ -75,6 +80,7 @@ def addArtwork(catalog, artwork):
     informacion de dicha obra
     """
     lt.addLast(catalog["artworks"], artwork)
+    addArtworkNationality(catalog, nationality, artwork)
 
 
 def addArtworkMedium(catalog, medium, artwork):
@@ -93,6 +99,22 @@ def addArtworkMedium(catalog, medium, artwork):
     lt.addLast(tecnica["artworks"], artwork)
 
 
+def addArtworkNationality(catalog, nationality, artwork):
+    """
+    Adiciona una obra a la lista de obras que son de una nacionalidad
+    en especifico
+    """
+    nationalities = catalog["nationalities"]
+    existNationality = mp.contains(nationalities, nationality)
+    if existNationality:
+        entry = mp.get(nationalities, nationality)
+        nacionalidad = me.getValue(entry)
+    else:
+        nacionalidad = newNationality(nationality)
+        mp.put(nationalities, nationality, nacionalidad)
+    lt.addLast(nacionalidad["artworks"], artwork)
+
+
 # Funciones para creacion de datos
 
 def newMedium(medium):
@@ -104,6 +126,17 @@ def newMedium(medium):
     tecnica["medium"] = medium
     tecnica["artworks"] = lt.newList("SINGLE_LINKED")
     return tecnica
+
+
+def newNationality(nationality):
+    """
+    Crea una nueva estructura para modelar las nacionalidades de una obra
+    """
+    nacionalidad = {"nationality": "",
+                    "artworks": None}
+    nacionalidad["nationality"] = nationality
+    nacionalidad["artworks"] = lt.newList("SINGLE_LINKED")
+    return nacionalidad
 
 
 # Funciones de consulta
