@@ -103,6 +103,9 @@ def printMenu():
     print("7 - Salir de la aplicación")
     print("-"*62)
 
+    print("9 - Contar las obras de una nacionalidad")
+    print("-"*62)
+
 
 # Funciones de inicializacion
 
@@ -171,6 +174,15 @@ while True:
 
     elif int(inputs[0]) == 6:
         pass
+
+    elif int(inputs[0]) == 9:
+        print("\n" + "-"*23 + " Req n. Inputs " + "-"*24)
+        nationalityName = input("Indique la nacionalidad que desea buscar: ")
+        natDict = controller.getArworksbyNationality(catalog, nationalityName)
+        cantidad = lt.size(natDict["artworks"])
+        print("\n" + "-"*23 + " Req n. Answer " + "-"*24)
+        print("Hay " + str(cantidad) + " obras para la nacionalidad "
+              + nationalityName)
 
     else:
         sys.exit(0)

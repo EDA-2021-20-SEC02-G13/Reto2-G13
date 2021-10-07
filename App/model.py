@@ -59,7 +59,7 @@ def newCatalog():
     catalog["nationalities"] = mp.newMap(119,
                                          maptype="PROBING",
                                          loadfactor=0.5,
-                                         comparefunction=compareMedium)
+                                         comparefunction=compareNationality)
 
     return catalog
 
@@ -80,7 +80,9 @@ def addArtwork(catalog, artwork):
     informacion de dicha obra
     """
     lt.addLast(catalog["artworks"], artwork)
-    addArtworkNationality(catalog, nationality, artwork)
+    nacionalidades = nationalityArtistsinArtwork(artwork, catalog["artists"])
+    for nacionalidad in lt.iterator(nacionalidades):
+        addArtworkNationality(catalog, nacionalidad, artwork)
 
 
 def addArtworkMedium(catalog, medium, artwork):
@@ -197,6 +199,35 @@ def getArworksbyMedium(catalog, mediumName):
     return None
 
 
+def nationalityArtistsinArtwork(artwork, artists):
+    """
+    Basados en los ConstituentIDs de los artistas, retorna las nacionalidades
+    de una obra en especifico
+    """
+    artistas = artwork["ConstituentID"]
+    artistas = artistas.replace("[", "").replace("]", "").split(", ")
+    nacionalidades = lt.newList("ARRAY_LIST")
+    for id in artistas:
+        for artist in lt.iterator(artists):
+            if id == artist["ConstituentID"]:
+                artistNat = artist["Nationality"]
+                if artistNat == "" or artistNat == "Nationality unknown":
+                    artist["Nationality"] = "Unknown"
+                lt.addLast(nacionalidades, artist["Nationality"])
+                break
+    return nacionalidades
+
+
+def getArworksbyNationality(catalog, nationalityName):
+    """
+    Retorna todas las obras dada una nacionalidad
+    """
+    nacionalidad = mp.get(catalog["nationalities"], nationalityName)
+    if nacionalidad:
+        return me.getValue(nacionalidad)
+    return None
+
+
 # Funciones utilizadas para comparar elementos dentro de una lista
 
 def cmpArtworkByDate(artwork1, artwork2):
@@ -240,6 +271,20 @@ def compareMedium(keyname, medium):
     un entry de un map
     """
     mediumEntry = me.getKey(medium)
+    if (keyname == mediumEntry):
+        return 0
+    elif (keyname > mediumEntry):
+        return 1
+    else:
+        return -1
+
+
+def compareNationality(keyname, nationality):
+    """
+    Compara dos nacionalidades. El primero es una cadena de caracteres y el
+    segundo un entry de un map
+    """
+    mediumEntry = me.getKey(nationality)
     if (keyname == mediumEntry):
         return 0
     elif (keyname > mediumEntry):

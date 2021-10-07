@@ -108,3 +108,11 @@ def getArworksbyMedium(catalog, mediumName):
     """
     mediumInfo = model.getArworksbyMedium(catalog, mediumName)
     return mediumInfo
+
+
+def getArworksbyNationality(catalog, nationalityName):
+    """
+    Retorna todas las obras dada una nacionalidad
+    """
+    nationalityInfo = model.getArworksbyNationality(catalog, nationalityName)
+    return nationalityInfo
