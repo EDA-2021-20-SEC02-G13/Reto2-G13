@@ -57,8 +57,8 @@ def newCatalog():
                                    comparefunction=compareMedium)
 
     catalog["nationalities"] = mp.newMap(118,
-                                         maptype="PROBING",
-                                         loadfactor=0.5,
+                                         maptype="CHAINING",
+                                         loadfactor=4,
                                          comparefunction=compareNationality)
 
     return catalog
