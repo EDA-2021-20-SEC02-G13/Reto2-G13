@@ -71,6 +71,13 @@ def loadArtworks(catalog):
 
 # Funciones de ordenamiento
 
+def sortArtWorks(artworks, sizeArtworks):
+    """
+    Ordena las obras de arte por fecha de adquisicion
+    """
+    return model.sortArtWorks(artworks, sizeArtworks)
+
+
 def sortDateArtworks(artworks, sizeArtworks):
     """
     Ordena las obras por la fecha de la obra
@@ -79,6 +86,13 @@ def sortDateArtworks(artworks, sizeArtworks):
 
 
 # Funciones de consulta sobre el catálogo
+
+def artworksRange(catalog, fecha1, fecha2):
+    """
+    Obtiene las obras de un rango de fechas y las almacena en un mapa de fechas
+    """
+    return model.artworksRange(catalog, fecha1, fecha2)
+
 
 def constituentID(nombre, catalog):
     """

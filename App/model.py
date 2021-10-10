@@ -61,6 +61,11 @@ def newCatalog():
                                          loadfactor=4,
                                          comparefunction=compareNationality)
 
+    catalog["artDateAcquired"] = mp.newMap(32800,
+                                           maptype="PROBING",
+                                           loadfactor=0.5,
+                                           comparefunction=compareDateAcquired)
+
     return catalog
 
 
@@ -83,6 +88,22 @@ def addArtwork(catalog, artwork):
     nacionalidades = nationalityArtistsinArtwork(artwork, catalog["artists"])
     for nacionalidad in lt.iterator(nacionalidades):
         addArtworkNationality(catalog, nacionalidad, artwork)
+
+
+def addArtworkRange(catalog, fecha, artwork):
+    """
+    Adiciona una obra a la lista de fechas que contienen una fecha de
+    adquisicion en especifico
+    """
+    fechas = catalog["artDateAcquired"]
+    existfecha = mp.contains(fechas, fecha)
+    if existfecha:
+        entry = mp.get(fechas, fecha)
+        dateAc = me.getValue(entry)
+    else:
+        dateAc = newDateAcquired(fecha)
+        mp.put(fechas, fecha, dateAc)
+    lt.addLast(dateAc["artworks"], artwork)
 
 
 def addArtworkMedium(catalog, medium, artwork):
@@ -119,6 +140,24 @@ def addArtworkNationality(catalog, nationality, artwork):
 
 # Funciones para creacion de datos
 
+def newDateAcquired(fecha):
+    """
+    Crea una nueva estructura para modelar las obras de una fecha
+    """
+    dateAc = {"dateAcquired": "",
+              "artworks": None}
+    dateAc["dateAcquired"] = fecha
+    dateAc["artworks"] = lt.newList("SINGLE_LINKED")
+    return dateAc
+
+
+def newNames(artwork, names):
+    """
+    Adiciona los nombres de los artistas a la obra dada por parametro
+    """
+    artwork["NombresArtistas"] = names
+
+
 def newMedium(medium):
     """
     Crea una nueva estructura para modelar las obras de una tecnica
@@ -142,6 +181,46 @@ def newNationality(nationality):
 
 
 # Funciones de consulta
+
+def artworksRange(catalog, fecha1, fecha2):
+    """
+    Obtiene las obras de un rango de fechas y las almacena en un mapa, la
+    cantidad de obras adquiridas por compra y la cantidad de obras del rango
+    """
+    artworks = catalog["artworks"]
+    contador = 0
+    total = 0
+    for artwork in lt.iterator(artworks):
+        fecha = artwork["DateAcquired"]
+        if fecha == "":
+            fecha = "2099-09-09"
+        if fecha >= fecha1 and fecha <= fecha2:
+            addArtworkRange(catalog, fecha, artwork)
+            namesArtistsinArtworks(artwork, catalog["artists"])
+            if "purchase" in artwork["CreditLine"].lower():
+                contador += 1
+            total += 1
+    return mp.keySet(catalog["artDateAcquired"]), contador, total
+
+
+def namesArtistsinArtworks(obra, artists):
+    """
+    Basados en los ConstituentIDs de los artistas, agrega los nombres a la
+    lista de obras
+    """
+    id = obra["ConstituentID"]
+    id = id.replace("[", "").replace("]", "").split(", ")
+    nombres = lt.newList("ARRAY_LIST")
+    for artista in id:
+        for artist in lt.iterator(artists):
+            if artista == artist["ConstituentID"]:
+                lt.addLast(nombres, artist["DisplayName"])
+                break
+    artistas = ""
+    for nombre in lt.iterator(nombres):
+        artistas += nombre + ", "
+    newNames(obra, artistas[:-2])
+
 
 def constituentID(nombre, catalog):
     """
@@ -230,6 +309,19 @@ def getArworksbyNationality(catalog, nationalityName):
 
 # Funciones utilizadas para comparar elementos dentro de una lista
 
+def cmpArtworkByDateAcquired(artwork1, artwork2):
+    """
+    Devuelve verdadero (True) si el "DateAcquired" de artwork1 es menor que
+    el de artwork2
+    Args:
+        artwork1: informacion de la primera obra que incluye
+                  unicamente su valor "DateAcquired"
+        artwork2: informacion de la segunda obra que incluye
+                  unicamente su valor "DateAcquired"
+    """
+    return artwork1 < artwork2
+
+
 def cmpArtworkByDate(artwork1, artwork2):
     """
     Devuelve verdadero (True) si el "Date" de artwork1 es menor que
@@ -253,6 +345,16 @@ def cmpArtworkByDate(artwork1, artwork2):
 
 # Funciones de ordenamiento
 
+def sortArtWorks(artworks, sizeArtworks):
+    """
+    Ordena las obras de arte por fecha de adquisicion
+    """
+    sub_list = lt.subList(artworks, 1, sizeArtworks)
+    sub_list = sub_list.copy()
+    sorted_list = ms.sort(sub_list, cmpArtworkByDateAcquired)
+    return sorted_list
+
+
 def sortDateArtworks(artworks, sizeArtworks):
     """
     Ordena las obras por la fecha de la obra
@@ -264,6 +366,20 @@ def sortDateArtworks(artworks, sizeArtworks):
 
 
 # Funciones de comparacion
+
+def compareDateAcquired(keyname, fecha):
+    """
+    Compara dos fechas de adquisicion. El primero es una cadena de caracteres
+    y el segundo un entry de un map
+    """
+    dateEntry = me.getKey(fecha)
+    if (keyname == dateEntry):
+        return 0
+    elif (keyname > dateEntry):
+        return 1
+    else:
+        return -1
+
 
 def compareMedium(keyname, medium):
     """
@@ -284,10 +400,10 @@ def compareNationality(keyname, nationality):
     Compara dos nacionalidades. El primero es una cadena de caracteres y el
     segundo un entry de un map
     """
-    mediumEntry = me.getKey(nationality)
-    if (keyname == mediumEntry):
+    nationalityEntry = me.getKey(nationality)
+    if (keyname == nationalityEntry):
         return 0
-    elif (keyname > mediumEntry):
+    elif (keyname > nationalityEntry):
         return 1
     else:
         return -1

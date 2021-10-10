@@ -26,6 +26,7 @@ import time
 import sys
 import controller
 from DISClib.ADT import list as lt
+from DISClib.ADT import map as mp
 assert cf
 
 """
@@ -34,6 +35,9 @@ Presenta el menu de opciones y por cada seleccion
 se hace la solicitud al controlador para ejecutar la
 operación solicitada
 """
+
+default_limit = 1000
+sys.setrecursionlimit(default_limit*10)
 
 
 # Funciones para la impresión de resultados
@@ -51,6 +55,50 @@ def printCargaArchivos(catalog, sizeArtists, sizeArtworks):
     for pos2 in range(sizeArtworks-2, sizeArtworks+1):
         print(lt.getElement(catalog["artworks"], pos2))
     print("-"*62)
+
+
+def printArtworkDateAcquired(sortArtRange, fecha1, fecha2, compras, total):
+    """
+    Imprime los datos requeridos para el requerimiento 2
+    """
+    tbArtworks = PrettyTable(["Titulo", "Artista(s)", "Fecha", "Medio",
+                              "Dimensiones"])
+    mapDate = catalog["artDateAcquired"]
+    pos = 1
+    while pos < 4:
+        key = lt.getElement(sortArtRange, pos)
+        artworks = mp.get(mapDate, key)
+        for artwork in lt.iterator(artworks["value"]["artworks"]):
+            if pos == 4:
+                break
+            tbArtworks.add_row([artwork["Title"], artwork["NombresArtistas"],
+                                artwork["DateAcquired"], artwork["Medium"],
+                                artwork["Dimensions"]])
+            pos += 1
+    listaUltimos = lt.newList("SINGLE_LINKED")
+    pos2 = lt.size(sortArtRange)
+    i = 1
+    while i < 4:
+        key = lt.getElement(sortArtRange, pos2)
+        artworks = mp.get(mapDate, key)
+        for artwork in lt.iterator(artworks["value"]["artworks"]):
+            pos2 -= 1
+            if i == 4:
+                break
+            lt.addFirst(listaUltimos, artwork)
+            i += 1
+    for artwork in lt.iterator(listaUltimos):
+        tbArtworks.add_row([artwork["Title"], artwork["NombresArtistas"],
+                            artwork["DateAcquired"], artwork["Medium"],
+                            artwork["Dimensions"]])
+    tbArtworks.max_width = 40
+    tbArtworks.hrules = ALL
+    print("\n" + "-"*23 + " Req 2. Answer " + "-"*24)
+    print("El MoMA adquirió " + str(total) + " obras unicas entre " + fecha1
+          + " y " + fecha2)
+    print("El numero total de obras adquiridas por compra es: " + compras)
+    print("\n" + "Las tras primeras y tres ultimas obras adquiridas son:")
+    print(tbArtworks)
 
 
 def printArtistArtworks(obras, nombre, constituentID, tecnicas):
@@ -151,7 +199,21 @@ while True:
         pass
 
     elif int(inputs[0]) == 2:
-        pass
+        print("\n" + "-"*23 + " Req 2. Inputs " + "-"*24)
+        fecha1 = str(input("Indique la fecha inicial con la que desea "
+                           "iniciar el rango (YYYY-MM-DD): "))
+        fecha2 = str(input("Indique la fecha final con la que desea finalizar "
+                           "el rango (YYYY-MM-DD): "))
+        start_time = time.process_time()
+        tupleArtRange = controller.artworksRange(catalog, fecha1, fecha2)
+        ltArtRange = tupleArtRange[0]
+        compras = str(tupleArtRange[1])
+        total = tupleArtRange[2]
+        sortArtRange = controller.sortArtWorks(ltArtRange, lt.size(ltArtRange))
+        stop_time = time.process_time()
+        elapsed_time_mseg = round((stop_time - start_time)*1000, 2)
+        print("Tiempo:", elapsed_time_mseg, "mseg")
+        printArtworkDateAcquired(sortArtRange, fecha1, fecha2, compras, total)
 
     elif int(inputs[0]) == 3:
         print("\n" + "-"*23 + " Req 3. Inputs " + "-"*24)
