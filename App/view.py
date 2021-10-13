@@ -196,15 +196,11 @@ while True:
         printCargaArchivos(catalog, sizeArtists, sizeArtworks)
 
     elif int(inputs[0]) == 1:
-        fecha1=input('Indique la fecha que quiere buscar: ')
-        #respuesta = controller.getAuthorsbyDate(catalog,fecha1)
-        #print(respuesta)
-        artists = catalog["artists"]
-        for artist in lt.iterator(artists):
-            date = artist["BeginDate"]
-            author = artist["DisplayName"]
-            print(date)
-            print(author)
+
+        print(controller.getAuthors(catalog))
+        
+        
+        
         
 
     elif int(inputs[0]) == 2:

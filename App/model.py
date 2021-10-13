@@ -45,7 +45,7 @@ def newCatalog():
     """
     catalog = {"artists": None,
                "artworks": None,
-               "mediums": None }
+               "mediums": None}
 
     catalog["artists"] = lt.newList("SINGLE_LINKED")
 
@@ -112,20 +112,26 @@ def addArtworkRange(catalog, fecha, artwork):
     lt.addLast(dateAc["artworks"], artwork)
 
 
-def addAuthorDate(catalog, date, author):
+def addAuthorDate(catalog):
     """
     Adiciona una obra a la lista de obras que utilizaron una tecnica
     en especifico
     """
+    artists = catalog["artists"]
     dates = catalog["dates"]
-    existDate = mp.contains(dates, date)
-    if existDate:
-        entry = mp.get(dates, date)
-        autor = me.getValue(entry)
-    else:
-        autor = newAuthor(author)
-        mp.put(dates, date, author)
-    lt.addLast(autor["autores"], author)
+    for artist in lt.iterator(artists):
+        date = artist["BeginDate"]
+        author = artist["DisplayName"]
+        existDate = mp.contains(dates, date)
+        if existDate:
+            entry = mp.get(dates, date)
+            autor = me.getValue(entry)
+        else:
+            autor = newAuthor(date)
+            mp.put(dates, date, autor)
+        lt.addLast(autor["autores"], author)
+    return dates
+
 
 
 def addArtworkMedium(catalog, medium, artwork):

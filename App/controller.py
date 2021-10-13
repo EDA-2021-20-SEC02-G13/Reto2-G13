@@ -124,11 +124,11 @@ def getArworksbyMedium(catalog, mediumName):
     return mediumInfo
 
 
-def getAuthorsbyDate(catalog, date):
+def getAuthors(catalog):
     """
     Retorna todas las obras dada una tecnica
     """
-    AuthorInfo = model.getAuthorsbyDate(catalog, date)
+    AuthorInfo = model.addAuthorDate(catalog)
     return AuthorInfo
 
 
