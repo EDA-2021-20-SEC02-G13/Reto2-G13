@@ -45,7 +45,7 @@ def newCatalog():
     """
     catalog = {"artists": None,
                "artworks": None,
-               "mediums": None}
+               "mediums": None }
 
     catalog["artists"] = lt.newList("SINGLE_LINKED")
 
@@ -55,6 +55,11 @@ def newCatalog():
                                    maptype="PROBING",
                                    loadfactor=0.5,
                                    comparefunction=compareMedium)
+
+    catalog["dates"] = mp.newMap(237,
+                                maptype="PROBING",
+                                loadfactor=0.5,
+                                comparefunction=compareNationality)
 
     catalog["nationalities"] = mp.newMap(118,
                                          maptype="CHAINING",
@@ -77,6 +82,7 @@ def addArtist(catalog, artist):
     a la informacion de dicho artista
     """
     lt.addLast(catalog["artists"], artist)
+    
 
 
 def addArtwork(catalog, artwork):
@@ -104,6 +110,22 @@ def addArtworkRange(catalog, fecha, artwork):
         dateAc = newDateAcquired(fecha)
         mp.put(fechas, fecha, dateAc)
     lt.addLast(dateAc["artworks"], artwork)
+
+
+def addAuthorDate(catalog, date, author):
+    """
+    Adiciona una obra a la lista de obras que utilizaron una tecnica
+    en especifico
+    """
+    dates = catalog["dates"]
+    existDate = mp.contains(dates, date)
+    if existDate:
+        entry = mp.get(dates, date)
+        autor = me.getValue(entry)
+    else:
+        autor = newAuthor(author)
+        mp.put(dates, date, author)
+    lt.addLast(autor["autores"], author)
 
 
 def addArtworkMedium(catalog, medium, artwork):
@@ -150,12 +172,22 @@ def newDateAcquired(fecha):
     dateAc["artworks"] = lt.newList("SINGLE_LINKED")
     return dateAc
 
-
 def newNames(artwork, names):
     """
     Adiciona los nombres de los artistas a la obra dada por parametro
     """
     artwork["NombresArtistas"] = names
+
+
+def newAuthor(fecha):
+    """
+    Crea una nueva estructura para modelar las obras de una tecnica
+    """
+    autor = { "fecha": "",
+               "autores": None}
+    autor["fecha"] = fecha
+    autor["autores"] = lt.newList("SINGLE_LINKED")
+    return autor
 
 
 def newMedium(medium):
@@ -277,6 +309,14 @@ def getArworksbyMedium(catalog, mediumName):
         return me.getValue(medium)
     return None
 
+def getAuthorsbyDate(catalog, date):
+    """
+    Retorna todas las obras dada una tecnica
+    """
+    fecha = mp.get(catalog["dates"], date)
+    if fecha:
+        return me.getValue(fecha)
+    return None
 
 def nationalityArtistsinArtwork(artwork, artists):
     """
