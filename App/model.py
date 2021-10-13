@@ -45,7 +45,10 @@ def newCatalog():
     """
     catalog = {"artists": None,
                "artworks": None,
-               "mediums": None}
+               "mediums": None,
+               "dates": None,
+               "artDateAcquired": None,
+               "nationalities": None}
 
     catalog["artists"] = lt.newList("SINGLE_LINKED")
 
@@ -56,20 +59,20 @@ def newCatalog():
                                    loadfactor=0.5,
                                    comparefunction=compareMedium)
 
-    catalog["dates"] = mp.newMap(237,
-                                maptype="PROBING",
-                                loadfactor=0.5,
-                                comparefunction=compareNationality)
-
-    catalog["nationalities"] = mp.newMap(118,
-                                         maptype="CHAINING",
-                                         loadfactor=4,
-                                         comparefunction=compareNationality)
+    catalog["dates"] = mp.newMap(235,
+                                 maptype="PROBING",
+                                 loadfactor=0.5,
+                                 comparefunction=compareBeginDate)
 
     catalog["artDateAcquired"] = mp.newMap(32800,
                                            maptype="PROBING",
                                            loadfactor=0.5,
                                            comparefunction=compareDateAcquired)
+
+    catalog["nationalities"] = mp.newMap(118,
+                                         maptype="CHAINING",
+                                         loadfactor=4,
+                                         comparefunction=compareNationality)
 
     return catalog
 
@@ -82,7 +85,7 @@ def addArtist(catalog, artist):
     a la informacion de dicho artista
     """
     lt.addLast(catalog["artists"], artist)
-    
+    addAuthorDate(catalog, artist, artist["BeginDate"])
 
 
 def addArtwork(catalog, artwork):
@@ -94,6 +97,22 @@ def addArtwork(catalog, artwork):
     nacionalidades = nationalityArtistsinArtwork(artwork, catalog["artists"])
     for nacionalidad in lt.iterator(nacionalidades):
         addArtworkNationality(catalog, nacionalidad, artwork)
+
+
+def addAuthorDate(catalog, artist, date):
+    """
+    Adiciona una obra a la lista de artistas que son de una fecha de nacimiento
+    en especifico
+    """
+    dates = catalog["dates"]
+    existDate = mp.contains(dates, date)
+    if existDate:
+        entry = mp.get(dates, date)
+        fecha = me.getValue(entry)
+    else:
+        fecha = newBeginDate(date)
+        mp.put(dates, date, fecha)
+    lt.addLast(fecha["artists"], artist)
 
 
 def addArtworkRange(catalog, fecha, artwork):
@@ -110,28 +129,6 @@ def addArtworkRange(catalog, fecha, artwork):
         dateAc = newDateAcquired(fecha)
         mp.put(fechas, fecha, dateAc)
     lt.addLast(dateAc["artworks"], artwork)
-
-
-def addAuthorDate(catalog):
-    """
-    Adiciona una obra a la lista de obras que utilizaron una tecnica
-    en especifico
-    """
-    artists = catalog["artists"]
-    dates = catalog["dates"]
-    for artist in lt.iterator(artists):
-        date = artist["BeginDate"]
-        author = artist["DisplayName"]
-        existDate = mp.contains(dates, date)
-        if existDate:
-            entry = mp.get(dates, date)
-            autor = me.getValue(entry)
-        else:
-            autor = newAuthor(date)
-            mp.put(dates, date, autor)
-        lt.addLast(autor["autores"], author)
-    return dates
-
 
 
 def addArtworkMedium(catalog, medium, artwork):
@@ -178,6 +175,7 @@ def newDateAcquired(fecha):
     dateAc["artworks"] = lt.newList("SINGLE_LINKED")
     return dateAc
 
+
 def newNames(artwork, names):
     """
     Adiciona los nombres de los artistas a la obra dada por parametro
@@ -185,15 +183,15 @@ def newNames(artwork, names):
     artwork["NombresArtistas"] = names
 
 
-def newAuthor(fecha):
+def newBeginDate(fecha):
     """
-    Crea una nueva estructura para modelar las obras de una tecnica
+    Crea una nueva estructura para modelar las obras de una fecha de nacimiento
     """
-    autor = { "fecha": "",
-               "autores": None}
-    autor["fecha"] = fecha
-    autor["autores"] = lt.newList("SINGLE_LINKED")
-    return autor
+    beginDate = {"beginDate": "",
+                 "artists": None}
+    beginDate["beginDate"] = fecha
+    beginDate["artists"] = lt.newList("SINGLE_LINKED")
+    return beginDate
 
 
 def newMedium(medium):
@@ -315,14 +313,23 @@ def getArworksbyMedium(catalog, mediumName):
         return me.getValue(medium)
     return None
 
-def getAuthorsbyDate(catalog, date):
+
+def getAuthorsByDate(catalog, anio1, anio2):
     """
-    Retorna todas las obras dada una tecnica
+    Retorna una lista de fechas dado un rango determinado por dos años
     """
-    fecha = mp.get(catalog["dates"], date)
-    if fecha:
-        return me.getValue(fecha)
-    return None
+    dates = catalog["dates"]
+    datesArtists = lt.newList("ARRAY_LIST")
+    contador = 0
+    for anio in lt.iterator(mp.keySet(dates)):
+        if anio >= anio1 and anio <= anio2:
+            lt.addLast(datesArtists, anio)
+            pareja = mp.get(dates, anio)
+            artists = pareja["value"]["artists"]
+            for artist in lt.iterator(artists):
+                contador += 1
+    return datesArtists, contador
+
 
 def nationalityArtistsinArtwork(artwork, artists):
     """
@@ -354,6 +361,19 @@ def getArworksbyNationality(catalog, nationalityName):
 
 
 # Funciones utilizadas para comparar elementos dentro de una lista
+
+def cmpArtistByBeginDate(artist1, artist2):
+    """
+    Devuelve verdadero (True) si el "BeginDate" de artist1 es menor que
+    el de artist2
+    Args:
+        artist1: informacion del primer artista que incluye
+                 unicamente su valor "BeginDate"
+        artist2: informacion del segundo artista que incluye
+                 unicamente su valor "BeginDate"
+    """
+    return int(artist1) < int(artist2)
+
 
 def cmpArtworkByDateAcquired(artwork1, artwork2):
     """
@@ -391,6 +411,16 @@ def cmpArtworkByDate(artwork1, artwork2):
 
 # Funciones de ordenamiento
 
+def sortArtists(artists, sizeArtists):
+    """
+    Ordena los artistas por fecha de nacimiento
+    """
+    sub_list = lt.subList(artists, 1, sizeArtists)
+    sub_list = sub_list.copy()
+    sorted_list = ms.sort(sub_list, cmpArtistByBeginDate)
+    return sorted_list
+
+
 def sortArtWorks(artworks, sizeArtworks):
     """
     Ordena las obras de arte por fecha de adquisicion
@@ -412,6 +442,20 @@ def sortDateArtworks(artworks, sizeArtworks):
 
 
 # Funciones de comparacion
+
+def compareBeginDate(keyname, fecha):
+    """
+    Compara dos fechas de nacimiento. El primero es una cadena de caracteres
+    y el segundo un entry de un map
+    """
+    dateEntry = me.getKey(fecha)
+    if (keyname == dateEntry):
+        return 0
+    elif (keyname > dateEntry):
+        return 1
+    else:
+        return -1
+
 
 def compareDateAcquired(keyname, fecha):
     """

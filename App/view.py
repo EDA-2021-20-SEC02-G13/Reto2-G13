@@ -57,6 +57,51 @@ def printCargaArchivos(catalog, sizeArtists, sizeArtworks):
     print("-"*62)
 
 
+def printArtistBeginDate(rangeArtists, anio1, anio2, total):
+    """
+    Imprime los datos requeridos para el requerimiento 1
+    """
+    tbArtists = PrettyTable(["Nombre", "Año de nacimiento", "Año de "
+                             "fallecimiento", "Nacionalidad", "Genero"])
+    mapDate = catalog["dates"]
+    pos = 1
+    u = 1
+    while u < 4:
+        key = lt.getElement(rangeArtists, pos)
+        artists = mp.get(mapDate, key)
+        for artist in lt.iterator(artists["value"]["artists"]):
+            if u == 4:
+                break
+            tbArtists.add_row([artist["DisplayName"], artist["BeginDate"],
+                               artist["EndDate"], artist["Nationality"],
+                               artist["Gender"]])
+            u += 1
+        pos += 1
+    listaUltimos = lt.newList("SINGLE_LINKED")
+    pos2 = lt.size(rangeArtists)
+    i = 1
+    while i < 4:
+        key = lt.getElement(rangeArtists, pos2)
+        artists = mp.get(mapDate, key)
+        for artist in lt.iterator(artists["value"]["artists"]):
+            if i == 4:
+                break
+            lt.addFirst(listaUltimos, artist)
+            i += 1
+        pos2 -= 1
+    for artist in lt.iterator(listaUltimos):
+        tbArtists.add_row([artist["DisplayName"], artist["BeginDate"],
+                           artist["EndDate"], artist["Nationality"],
+                           artist["Gender"]])
+    tbArtists.max_width = 40
+    tbArtists.hrules = ALL
+    print("\n" + "-"*23 + " Req 1. Answer " + "-"*24)
+    print("Hay " + str(total) + " artistas que nacieron entre " + anio1 + " y "
+          + anio2)
+    print("\n" + "Los tres primeros y tres ultimos artistas son:")
+    print(tbArtists)
+
+
 def printArtworkDateAcquired(sortArtRange, fecha1, fecha2, compras, total):
     """
     Imprime los datos requeridos para el requerimiento 2
@@ -65,16 +110,18 @@ def printArtworkDateAcquired(sortArtRange, fecha1, fecha2, compras, total):
                               "Dimensiones"])
     mapDate = catalog["artDateAcquired"]
     pos = 1
-    while pos < 4:
+    u = 1
+    while u < 4:
         key = lt.getElement(sortArtRange, pos)
         artworks = mp.get(mapDate, key)
         for artwork in lt.iterator(artworks["value"]["artworks"]):
-            if pos == 4:
+            if u == 4:
                 break
             tbArtworks.add_row([artwork["Title"], artwork["NombresArtistas"],
                                 artwork["DateAcquired"], artwork["Medium"],
                                 artwork["Dimensions"]])
-            pos += 1
+            u += 1
+        pos += 1
     listaUltimos = lt.newList("SINGLE_LINKED")
     pos2 = lt.size(sortArtRange)
     i = 1
@@ -82,11 +129,11 @@ def printArtworkDateAcquired(sortArtRange, fecha1, fecha2, compras, total):
         key = lt.getElement(sortArtRange, pos2)
         artworks = mp.get(mapDate, key)
         for artwork in lt.iterator(artworks["value"]["artworks"]):
-            pos2 -= 1
             if i == 4:
                 break
             lt.addFirst(listaUltimos, artwork)
             i += 1
+        pos2 -= 1
     for artwork in lt.iterator(listaUltimos):
         tbArtworks.add_row([artwork["Title"], artwork["NombresArtistas"],
                             artwork["DateAcquired"], artwork["Medium"],
@@ -196,12 +243,19 @@ while True:
         printCargaArchivos(catalog, sizeArtists, sizeArtworks)
 
     elif int(inputs[0]) == 1:
-
-        print(controller.getAuthors(catalog))
-        
-        
-        
-        
+        print("\n" + "-"*23 + " Req 1. Inputs " + "-"*24)
+        anio1 = str(input("Indique el año inicial con la que desea "
+                          "iniciar el rango: "))
+        anio2 = str(input("Indique el año final con la que desea finalizar "
+                          "el rango: "))
+        start_time = time.process_time()
+        tpArt = controller.getAuthorsByDate(catalog, anio1, anio2)
+        total = tpArt[1]
+        rangeArtists = controller.sortArtists(tpArt[0], lt.size(tpArt[0]))
+        stop_time = time.process_time()
+        elapsed_time_mseg = round((stop_time - start_time)*1000, 2)
+        print("Tiempo:", elapsed_time_mseg, "mseg")
+        printArtistBeginDate(rangeArtists, anio1, anio2, total)
 
     elif int(inputs[0]) == 2:
         print("\n" + "-"*23 + " Req 2. Inputs " + "-"*24)

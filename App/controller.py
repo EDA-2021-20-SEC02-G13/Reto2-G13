@@ -71,6 +71,13 @@ def loadArtworks(catalog):
 
 # Funciones de ordenamiento
 
+def sortArtists(artists, sizeArtists):
+    """
+    Ordena los artistas por fecha de nacimiento
+    """
+    return model.sortArtists(artists, sizeArtists)
+
+
 def sortArtWorks(artworks, sizeArtworks):
     """
     Ordena las obras de arte por fecha de adquisicion
@@ -124,12 +131,11 @@ def getArworksbyMedium(catalog, mediumName):
     return mediumInfo
 
 
-def getAuthors(catalog):
+def getAuthorsByDate(catalog, anio1, anio2):
     """
-    Retorna todas las obras dada una tecnica
+    Retorna una lista de fechas dado un rango determinado por dos años
     """
-    AuthorInfo = model.addAuthorDate(catalog)
-    return AuthorInfo
+    return model.getAuthorsByDate(catalog, anio1, anio2)
 
 
 def getArworksbyNationality(catalog, nationalityName):
