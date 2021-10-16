@@ -47,6 +47,7 @@ def loadData(catalog):
     """
     loadArtists(catalog)
     loadArtworks(catalog)
+    loadMaps(catalog)
 
 
 def loadArtists(catalog):
@@ -67,6 +68,13 @@ def loadArtworks(catalog):
     input_file = csv.DictReader(open(artworkfile, encoding="utf-8"))
     for artwork in input_file:
         model.addArtwork(catalog, artwork)
+
+
+def loadMaps(catalog):
+    """
+    Carga los mapas que requieren que ambas listas ya esten creadas
+    """
+    model.addArtistArtwork(catalog)
 
 
 # Funciones de ordenamiento
@@ -96,38 +104,25 @@ def sortDateArtworks(artworks, sizeArtworks):
 
 def artworksRange(catalog, fecha1, fecha2):
     """
-    Obtiene las obras de un rango de fechas y las almacena en un mapa de fechas
+    Obtiene las obras de un rango de fechas, la cantidad de obras adquiridas
+    por compra y la cantidad de obras del rango
     """
     return model.artworksRange(catalog, fecha1, fecha2)
 
 
-def constituentID(nombre, catalog):
-    """
-    Busca el ConstituentID de un artista, considerando el nombre dado
-    """
-    return model.constituentID(nombre, catalog)
-
-
-def artistArtworks(constituentID, catalog):
-    """
-    Obtiene todas las obras de un artista y las almacena en un mapa de tecnicas
-    """
-    return model.artistArtworks(constituentID, catalog)
-
-
-def artistMedium(mapTecnicas):
+def artistMedium(mapArtistas, nombre):
     """
     Identifica la tecnica más utilizada en las obras de un artista, el numero
     total de tecnicas distintas que se usaron, y el numero total de obras
     """
-    return model.artistMedium(mapTecnicas)
+    return model.artistMedium(mapArtistas, nombre)
 
 
-def getArworksbyMedium(catalog, mediumName):
+def getArworksbyMedium(catalog, mediumName, nombre):
     """
     Retorna todas las obras dada una tecnica
     """
-    mediumInfo = model.getArworksbyMedium(catalog, mediumName)
+    mediumInfo = model.getArworksbyMedium(catalog, mediumName, nombre)
     return mediumInfo
 
 
@@ -144,3 +139,17 @@ def getArworksbyNationality(catalog, nationalityName):
     """
     nationalityInfo = model.getArworksbyNationality(catalog, nationalityName)
     return nationalityInfo
+
+
+def getArtistByDate(catalog, anio1, anio2):
+    """
+    Retorna una lista de artistas dado un rango determinado por dos años
+    """
+    return model.getArtistByDate(catalog, anio1, anio2, )
+
+
+def getprolificArtist(catalog, artists, size):
+    """
+    Retorna una lista ordenada con los artistas mas prolificos
+    """
+    return model.getprolificArtist(catalog, artists, size)

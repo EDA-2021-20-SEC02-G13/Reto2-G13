@@ -183,6 +183,48 @@ def printArtistArtworks(obras, nombre, constituentID, tecnicas):
     print(tableObras)
 
 
+def printBonusArtist(rangeArtists, anio1, anio2, total, cantidad, first, lt1):
+    """
+    Imprime los datos requeridos para el requerimiento 6
+    """
+    tbArtists = PrettyTable(["Nombre", "Año de nacimiento", "Genero",
+                             "ArtworkNumber", "MediumNumber", "TopMedium"])
+    i = 1
+    for artist in lt.iterator(rangeArtists):
+        tbArtists.add_row([artist["DisplayName"], artist["BeginDate"],
+                           artist["Gender"], artist["ArtworkNumber"],
+                           artist["MediumNumber"], artist["TopMedium"]])
+        i += 1
+        if i == cantidad + 1:
+            break
+    tbArtists.max_width = 40
+    tbArtists.hrules = ALL
+    tbPro = PrettyTable(["Titulo", "Fecha de la obra", "Fecha de Adquisicion",
+                         "Medio", "Departamento", "Clasificacion",
+                         "Dimensiones"])
+    u = 1
+    for artwork in lt.iterator(lt1):
+        tbPro.add_row([artwork["Title"], artwork["Date"],
+                       artwork["DateAcquired"], artwork["Medium"],
+                       artwork["Department"], artwork["Classification"],
+                       artwork["Dimensions"]])
+        u += 1
+        if u == 6:
+            break
+    tbPro.max_width = 40
+    tbPro.hrules = ALL
+    print("\n" + "-"*23 + " Req 6. Answer " + "-"*24)
+    print("Hay " + str(total) + " artistas que nacieron entre " + anio1 + " y "
+          + anio2)
+    print("\n" + "El TOP " + str(cantidad) + " artistas mas prolificos son:")
+    print(tbArtists)
+    print("\n" + str(first["DisplayName"]) + "con MoMA ID "
+          + str(first["ConstituentID"]) + " tiene "
+          + str(first["ArtworkNumber"]) + " piezas en el museo")
+    print("Las 5 primeras obras a su nombre son:")
+    print(tbPro)
+
+
 # Menu de opciones
 
 def printMenu():
@@ -278,10 +320,9 @@ while True:
         print("\n" + "-"*23 + " Req 3. Inputs " + "-"*24)
         nombre = str(input("Indique el nombre del artista: "))
         start_time = time.process_time()
-        constituentID = controller.constituentID(nombre, catalog)
-        mapTecnicas = controller.artistArtworks(constituentID, catalog)
-        tecnicas = controller.artistMedium(mapTecnicas)
-        obras = controller.getArworksbyMedium(catalog, tecnicas[0])
+        tecnicas = controller.artistMedium(catalog["artistsMediums"], nombre)
+        obras = controller.getArworksbyMedium(catalog, tecnicas[0], nombre)
+        constituentID = tecnicas[3]
         stop_time = time.process_time()
         elapsed_time_mseg = round((stop_time - start_time)*1000, 2)
         print("Tiempo:", elapsed_time_mseg, "mseg")
@@ -294,7 +335,30 @@ while True:
         pass
 
     elif int(inputs[0]) == 6:
-        pass
+        print("\n" + "-"*23 + " Req 6. Inputs " + "-"*24)
+        anio1 = str(input("Indique el año inicial con la que desea "
+                          "iniciar el rango: "))
+        anio2 = str(input("Indique el año final con la que desea finalizar "
+                          "el rango: "))
+        start_time1 = time.process_time()
+        artists = controller.getArtistByDate(catalog, anio1, anio2)
+        stop_time1 = time.process_time()
+        elapsed_time_mseg1 = round((stop_time1 - start_time1)*1000, 2)
+        ltArtSize = lt.size(artists)
+        cantidad = int(input("Indique la cantidad de autores que desea conocer"
+                             ", menor o igual a " + str(ltArtSize) + ": "))
+        start_time2 = time.process_time()
+
+        rangeArtist = controller.getprolificArtist(catalog, artists, ltArtSize)
+        first = lt.getElement(rangeArtist, 1)
+        nombre = first["DisplayName"]
+        tecnicas = controller.artistMedium(catalog["artistsMediums"], nombre)
+        obras = controller.getArworksbyMedium(catalog, tecnicas[0], nombre)
+        stop_time2 = time.process_time()
+        elapsed_time_mseg2 = round((stop_time2 - start_time2)*1000, 2)
+        print("Tiempo:", elapsed_time_mseg1 + elapsed_time_mseg2, "mseg")
+        printBonusArtist(rangeArtist, anio1, anio2, ltArtSize, cantidad, first,
+                         obras["artworks"])
 
     elif int(inputs[0]) == 9:
         print("\n" + "-"*23 + " Req n. Inputs " + "-"*24)

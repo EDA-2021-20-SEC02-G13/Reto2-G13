@@ -54,11 +54,6 @@ def newCatalog():
 
     catalog["artworks"] = lt.newList("SINGLE_LINKED")
 
-    catalog["mediums"] = mp.newMap(250,
-                                   maptype="PROBING",
-                                   loadfactor=0.5,
-                                   comparefunction=compareMedium)
-
     catalog["dates"] = mp.newMap(235,
                                  maptype="PROBING",
                                  loadfactor=0.5,
@@ -68,6 +63,11 @@ def newCatalog():
                                            maptype="PROBING",
                                            loadfactor=0.5,
                                            comparefunction=compareDateAcquired)
+
+    catalog["artistsMediums"] = mp.newMap(15223,
+                                          maptype="PROBING",
+                                          loadfactor=0.5,
+                                          comparefunction=compareArtist)
 
     catalog["nationalities"] = mp.newMap(118,
                                          maptype="CHAINING",
@@ -97,6 +97,8 @@ def addArtwork(catalog, artwork):
     nacionalidades = nationalityArtistsinArtwork(artwork, catalog["artists"])
     for nacionalidad in lt.iterator(nacionalidades):
         addArtworkNationality(catalog, nacionalidad, artwork)
+    addArtworkRange(catalog, artwork["DateAcquired"], artwork)
+    namesArtistsinArtworks(artwork, catalog["artists"])
 
 
 def addAuthorDate(catalog, artist, date):
@@ -131,12 +133,46 @@ def addArtworkRange(catalog, fecha, artwork):
     lt.addLast(dateAc["artworks"], artwork)
 
 
-def addArtworkMedium(catalog, medium, artwork):
+def addArtistArtwork(catalog):
+    """
+    Agrega las obras de un artista a un mapa, donde las llaves son los artistas
+    y los valores sus obras y los medios utilizados
+    """
+    for artist in lt.iterator(catalog["artists"]):
+        consID = artist["ConstituentID"]
+        name = artist["DisplayName"]
+        for artwork in lt.iterator(catalog["artworks"]):
+            id = artwork["ConstituentID"]
+            id = id.replace("[", "").replace("]", "").split(", ")
+            for artista in id:
+                if consID == artista:
+                    medium = artwork["Medium"]
+                    addArtworkMedium(catalog, medium, artwork, name, consID)
+
+
+def addArtworkMedium(catalog, medium, artwork, name, consID):
+    """
+    Adiciona una obra a la lista de obras que utilizaron una tecnica en
+    especifico y a las obras de un artista
+    """
+    artists = catalog["artistsMediums"]
+    existArtist = mp.contains(artists, name)
+    if existArtist:
+        entry = mp.get(artists, name)
+        artista = me.getValue(entry)
+    else:
+        artista = newArtistMedium(name, consID)
+        mp.put(artists, name, artista)
+    lt.addLast(artista["artworks"], artwork)
+    addMedium(artista, medium, artwork)
+
+
+def addMedium(artista, medium, artwork):
     """
     Adiciona una obra a la lista de obras que utilizaron una tecnica
     en especifico
     """
-    mediums = catalog["mediums"]
+    mediums = artista["mediums"]
     existMedium = mp.contains(mediums, medium)
     if existMedium:
         entry = mp.get(mediums, medium)
@@ -194,6 +230,23 @@ def newBeginDate(fecha):
     return beginDate
 
 
+def newArtistMedium(name, consID):
+    """
+    Crea una nueva estructura para modelar las obras de un artista y tecnica
+    """
+    artista = {"artist": "",
+               "consID": "",
+               "artworks": None,
+               "mediums": mp.newMap(50,
+                                    maptype="PROBING",
+                                    loadfactor=0.5,
+                                    comparefunction=compareMedium)}
+    artista["artist"] = name
+    artista["consID"] = consID
+    artista["artworks"] = lt.newList("SINGLE_LINKED")
+    return artista
+
+
 def newMedium(medium):
     """
     Crea una nueva estructura para modelar las obras de una tecnica
@@ -216,35 +269,44 @@ def newNationality(nationality):
     return nacionalidad
 
 
+def newBonusInfo(artist, obras, tecnicas, topMedium):
+    """
+    Adiciona los nombres de los artistas a la obra dada por parametro
+    """
+    artist["ArtworkNumber"] = obras
+    artist["MediumNumber"] = tecnicas
+    artist["TopMedium"] = topMedium
+
+
 # Funciones de consulta
 
 def artworksRange(catalog, fecha1, fecha2):
     """
-    Obtiene las obras de un rango de fechas y las almacena en un mapa, la
-    cantidad de obras adquiridas por compra y la cantidad de obras del rango
+    Obtiene las obras de un rango de fechas, la cantidad de obras adquiridas
+    por compra y la cantidad de obras del rango
     """
-    artworks = catalog["artworks"]
+    fechas = catalog["artDateAcquired"]
+    datesArtworks = lt.newList("ARRAY_LIST")
     contador = 0
     total = 0
-    for artwork in lt.iterator(artworks):
-        fecha = artwork["DateAcquired"]
-        if fecha == "":
-            fecha = "2099-09-09"
+    for fecha in lt.iterator(mp.keySet(fechas)):
         if fecha >= fecha1 and fecha <= fecha2:
-            addArtworkRange(catalog, fecha, artwork)
-            namesArtistsinArtworks(artwork, catalog["artists"])
-            if "purchase" in artwork["CreditLine"].lower():
-                contador += 1
-            total += 1
-    return mp.keySet(catalog["artDateAcquired"]), contador, total
+            lt.addLast(datesArtworks, fecha)
+            pareja = mp.get(fechas, fecha)
+            artworks = pareja["value"]["artworks"]
+            for artwork in lt.iterator(artworks):
+                total += 1
+                if "purchase" in artwork["CreditLine"].lower():
+                    contador += 1
+    return datesArtworks, contador, total
 
 
-def namesArtistsinArtworks(obra, artists):
+def namesArtistsinArtworks(artwork, artists):
     """
     Basados en los ConstituentIDs de los artistas, agrega los nombres a la
     lista de obras
     """
-    id = obra["ConstituentID"]
+    id = artwork["ConstituentID"]
     id = id.replace("[", "").replace("]", "").split(", ")
     nombres = lt.newList("ARRAY_LIST")
     for artista in id:
@@ -255,60 +317,39 @@ def namesArtistsinArtworks(obra, artists):
     artistas = ""
     for nombre in lt.iterator(nombres):
         artistas += nombre + ", "
-    newNames(obra, artistas[:-2])
+    newNames(artwork, artistas[:-2])
 
 
-def constituentID(nombre, catalog):
-    """
-    Busca el ConstituentID de un artista, considerando el nombre dado
-    """
-    consID = None
-    for artist in lt.iterator(catalog["artists"]):
-        if nombre == artist["DisplayName"]:
-            consID = artist["ConstituentID"]
-            break
-    return consID
-
-
-def artistArtworks(constituentID, catalog):
-    """
-    Obtiene todas las obras de un artista y las almacena en un mapa de tecnicas
-    """
-    for artwork in lt.iterator(catalog["artworks"]):
-        id = artwork["ConstituentID"]
-        id = id.replace("[", "").replace("]", "").split(", ")
-        for artista in id:
-            if constituentID == artista:
-                addArtworkMedium(catalog, artwork["Medium"], artwork)
-    return catalog["mediums"]
-
-
-def artistMedium(mapTecnicas):
+def artistMedium(mapArtistas, nombre):
     """
     Identifica la tecnica más utilizada en las obras de un artista, el numero
     total de tecnicas distintas que se usaron, y el numero total de obras
     """
     mayor = 0
-    total = 0
     maximo = ""
-    distintas = mp.size(mapTecnicas)
-    tecnicas = mp.keySet(mapTecnicas)
-    for tecnica in lt.iterator(tecnicas):
-        pareja = mp.get(mapTecnicas, tecnica)
-        obras = pareja["value"]["artworks"]
-        cantObras = lt.size(obras)
-        total += cantObras
+    pareja = mp.get(mapArtistas, nombre)
+    obras = pareja["value"]["artworks"]
+    tecnicas = pareja["value"]["mediums"]
+    consID = pareja["value"]["consID"]
+    distintas = lt.size(mp.keySet(tecnicas))
+    for tecnica in lt.iterator(mp.keySet(tecnicas)):
+        pareja2 = mp.get(tecnicas, tecnica)
+        artworks = pareja2["value"]["artworks"]
+        cantObras = lt.size(artworks)
         if cantObras > mayor:
             maximo = tecnica
             mayor = cantObras
-    return maximo, distintas, total
+    return maximo, distintas, lt.size(obras), consID
 
 
-def getArworksbyMedium(catalog, mediumName):
+def getArworksbyMedium(catalog, mediumName, nombre):
     """
     Retorna todas las obras dada una tecnica
     """
-    medium = mp.get(catalog["mediums"], mediumName)
+    mapArtistas = catalog["artistsMediums"]
+    artista = mp.get(mapArtistas, nombre)
+    mapTecnicas = artista["value"]["mediums"]
+    medium = mp.get(mapTecnicas, mediumName)
     if medium:
         return me.getValue(medium)
     return None
@@ -360,6 +401,41 @@ def getArworksbyNationality(catalog, nationalityName):
     return None
 
 
+def getArtistByDate(catalog, anio1, anio2):
+    """
+    Retorna una lista de artistas dado un rango determinado por dos años
+    """
+    dates = catalog["dates"]
+    datesArtists = lt.newList("ARRAY_LIST")
+    for anio in lt.iterator(mp.keySet(dates)):
+        if anio >= anio1 and anio <= anio2:
+            pareja = mp.get(dates, anio)
+            artists = pareja["value"]["artists"]
+            for artist in lt.iterator(artists):
+                lt.addLast(datesArtists, artist)
+    return datesArtists
+
+
+def getprolificArtist(catalog, artists, size):
+    """
+    Retorna una lista ordenada con los artistas mas prolificos
+    """
+    mapArtistas = catalog["artistsMediums"]
+    for artist in lt.iterator(artists):
+        nombre = artist["DisplayName"]
+        pareja = mp.get(mapArtistas, nombre)
+        if pareja is None:
+            obras = 0
+            tecnicas = 0
+            mediums = (None, None)
+        else:
+            obras = lt.size(pareja["value"]["artworks"])
+            tecnicas = mp.size(pareja["value"]["mediums"])
+            mediums = artistMedium(catalog["artistsMediums"], nombre)
+        newBonusInfo(artist, obras, tecnicas, mediums[0])
+    return sortArtistArtworks(artists, size)
+
+
 # Funciones utilizadas para comparar elementos dentro de una lista
 
 def cmpArtistByBeginDate(artist1, artist2):
@@ -409,6 +485,22 @@ def cmpArtworkByDate(artwork1, artwork2):
     return date1 < date2
 
 
+def cmpArtistByCant(artist1, artist2):
+    """
+    Devuelve verdadero (True) si el "ArtworkNumber" de artist1 es mayor que
+    el de artist2
+    Args:
+        artist1: informacion del primer artista que incluye
+                 unicamente su valor "ArtworkNumber"
+        artist2: informacion del segundo artista que incluye
+                 unicamente su valor "ArtworkNumber"
+    """
+    if artist1["ArtworkNumber"] == artist2["ArtworkNumber"]:
+        return artist1["MediumNumber"] > artist2["MediumNumber"]
+    else:
+        return artist1["ArtworkNumber"] > artist2["ArtworkNumber"]
+
+
 # Funciones de ordenamiento
 
 def sortArtists(artists, sizeArtists):
@@ -441,6 +533,16 @@ def sortDateArtworks(artworks, sizeArtworks):
     return sorted_list
 
 
+def sortArtistArtworks(artists, cantidad):
+    """
+    Ordena los artistas por cantidad de obras y medios
+    """
+    sub_list = lt.subList(artists, 1, cantidad)
+    sub_list = sub_list.copy()
+    sorted_list = ms.sort(sub_list, cmpArtistByCant)
+    return sorted_list
+
+
 # Funciones de comparacion
 
 def compareBeginDate(keyname, fecha):
@@ -466,6 +568,20 @@ def compareDateAcquired(keyname, fecha):
     if (keyname == dateEntry):
         return 0
     elif (keyname > dateEntry):
+        return 1
+    else:
+        return -1
+
+
+def compareArtist(keyname, artist):
+    """
+    Compara dos artistas. El primero es una cadena de caracteres y el segundo
+    un entry de un map
+    """
+    artistEntry = me.getKey(artist)
+    if (keyname == artistEntry):
+        return 0
+    elif (keyname > artistEntry):
         return 1
     else:
         return -1
