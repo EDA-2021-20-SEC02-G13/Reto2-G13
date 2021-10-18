@@ -27,6 +27,7 @@ import sys
 import controller
 from DISClib.ADT import list as lt
 from DISClib.ADT import map as mp
+from DISClib.Algorithms.Sorting import mergesort as ms
 assert cf
 
 """
@@ -360,19 +361,30 @@ while True:
         printBonusArtist(rangeArtist, anio1, anio2, ltArtSize, cantidad, first,
                          obras["artworks"])
 
+    
     elif int(inputs[0]) == 9:
         print("\n" + "-"*23 + " Req n. Inputs " + "-"*24)
-        nationalityName = input("Indique la nacionalidad que desea buscar: ")
-        start_time = time.process_time()
-        natDict = controller.getArworksbyNationality(catalog, nationalityName)
-        cantidad = lt.size(natDict["artworks"])
-        stop_time = time.process_time()
-        elapsed_time_mseg = round((stop_time - start_time)*1000, 2)
-        print("Tiempo:", elapsed_time_mseg, "mseg")
-        print("\n" + "-"*23 + " Req n. Answer " + "-"*24)
-        print("Hay " + str(cantidad) + " obras para la nacionalidad "
-              + nationalityName)
-
+        lista_cantidad = lt.newList('ARRAY_LIST')
+        natDict = controller.getArworksbyNationality(catalog)
+        for n in lt.iterator(natDict):
+            cantidad = (lt.size(n["artworks"]))
+            lt.addLast(lista_cantidad,cantidad)
+        lista_cantidad['elements'].sort(reverse=True)
+        for n in lt.iterator(lista_cantidad):
+            for n2 in lt.iterator(natDict):
+                if n == lt.size(n2['artworks']):
+                    print('La nacionalidad ' + str(n2['nationality'])+ ' tiene ' +str(n) + ' obra.')
+        for xd in lt.iterator(natDict):
+            if lt.firstElement(lista_cantidad) == lt.size(xd["artworks"]):
+                print(lt.firstElement(xd['artworks']))
+                print(lt.getElement(xd['artworks'],12))
+                print(lt.getElement(xd['artworks'],13))
+                print(lt.getElement(xd['artworks'],(lt.size(xd["artworks"])-3)))
+                print(lt.getElement(xd['artworks'],(lt.size(xd["artworks"])-2)))
+                print(lt.lastElement(xd['artworks']))
+                
+                
+                  
     else:
         sys.exit(0)
 sys.exit(0)

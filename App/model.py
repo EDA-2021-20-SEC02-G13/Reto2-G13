@@ -391,14 +391,18 @@ def nationalityArtistsinArtwork(artwork, artists):
     return nacionalidades
 
 
-def getArworksbyNationality(catalog, nationalityName):
+def getArworksbyNationality(catalog):
     """
     Retorna todas las obras dada una nacionalidad
     """
-    nacionalidad = mp.get(catalog["nationalities"], nationalityName)
-    if nacionalidad:
-        return me.getValue(nacionalidad)
-    return None
+    lista_xd = lt.newList('ARRAY_LIST')
+    nationalityName = mp.keySet(catalog['nationalities'])
+    for nationality in lt.iterator(nationalityName):
+        nacionalidad = mp.get(catalog["nationalities"], nationality)
+        lt.addLast(lista_xd,me.getValue(nacionalidad))
+    return lista_xd
+        
+        
 
 
 def getArtistByDate(catalog, anio1, anio2):

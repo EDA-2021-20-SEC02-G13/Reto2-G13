@@ -133,11 +133,11 @@ def getAuthorsByDate(catalog, anio1, anio2):
     return model.getAuthorsByDate(catalog, anio1, anio2)
 
 
-def getArworksbyNationality(catalog, nationalityName):
+def getArworksbyNationality(catalog):
     """
     Retorna todas las obras dada una nacionalidad
     """
-    nationalityInfo = model.getArworksbyNationality(catalog, nationalityName)
+    nationalityInfo = model.getArworksbyNationality(catalog)
     return nationalityInfo
 
 
