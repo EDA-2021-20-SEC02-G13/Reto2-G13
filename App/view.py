@@ -363,6 +363,8 @@ while True:
 
     
     elif int(inputs[0]) == 9:
+        Ultimos_3 = lt.newList('ARRAY_LIST')
+        Primeros_3 = lt.newList('ARRAY_LIST')
         print("\n" + "-"*23 + " Req n. Inputs " + "-"*24)
         lista_cantidad = lt.newList('ARRAY_LIST')
         natDict = controller.getArworksbyNationality(catalog)
@@ -376,12 +378,28 @@ while True:
                     print('La nacionalidad ' + str(n2['nationality'])+ ' tiene ' +str(n) + ' obra.')
         for xd in lt.iterator(natDict):
             if lt.firstElement(lista_cantidad) == lt.size(xd["artworks"]):
-                print(lt.firstElement(xd['artworks']))
-                print(lt.getElement(xd['artworks'],12))
-                print(lt.getElement(xd['artworks'],13))
-                print(lt.getElement(xd['artworks'],(lt.size(xd["artworks"])-3)))
-                print(lt.getElement(xd['artworks'],(lt.size(xd["artworks"])-2)))
-                print(lt.lastElement(xd['artworks']))
+                ct = 0
+                unique = 1
+                print('The first and last 3 objects in the '+ xd['nationality']+' artwork list are: ' )
+                for i in range(1,lt.size(xd["artworks"])):
+                    if lt.getElement(xd['artworks'],i+1)!= lt.getElement(xd['artworks'],i) and ct < 3:
+                       first = lt.getElement(xd['artworks'],i)
+                       lt.addLast(Primeros_3,first)
+                       #print(lt.getElement(xd['artworks'],i))
+                       ct += 1
+                    if lt.getElement(xd['artworks'],i+1)!= lt.getElement(xd['artworks'],i):
+                        unique += 1
+                ctn = 0
+                for j in reversed(range(1,(lt.size(xd["artworks"])+1))):
+                    if lt.getElement(xd['artworks'],j-1)!= lt.getElement(xd['artworks'],j) and ctn < 3:
+                       last = lt.getElement(xd['artworks'],j)
+                       lt.addLast(Ultimos_3,last)
+                       #print(lt.getElement(xd['artworks'],j))
+                       ctn += 1
+                print('The TOP nationality in the museum is '+ xd['nationality'] +' with '+ str(unique)+ ' pieces of art.')
+            
+                    
+                
                 
                 
                   
