@@ -45,10 +45,11 @@ def newCatalog():
     """
     catalog = {"artists": None,
                "artworks": None,
-               "mediums": None,
                "dates": None,
                "artDateAcquired": None,
-               "nationalities": None}
+               "artistsMediums": None,
+               "nationalities": None,
+               "departments": None}
 
     catalog["artists"] = lt.newList("SINGLE_LINKED")
 
@@ -70,9 +71,14 @@ def newCatalog():
                                           comparefunction=compareArtist)
 
     catalog["nationalities"] = mp.newMap(118,
-                                         maptype="CHAINING",
-                                         loadfactor=4,
+                                         maptype="PROBING",
+                                         loadfactor=0.5,
                                          comparefunction=compareNationality)
+
+    catalog["departments"] = mp.newMap(8,
+                                       maptype="PROBING",
+                                       loadfactor=0.5,
+                                       comparefunction=compareDepartment)
 
     return catalog
 
@@ -98,6 +104,7 @@ def addArtwork(catalog, artwork):
     for nacionalidad in lt.iterator(nacionalidades):
         addArtworkNationality(catalog, nacionalidad, artwork)
     addArtworkRange(catalog, artwork["DateAcquired"], artwork)
+    addArtworkDepartment(catalog, artwork["Department"], artwork)
     namesArtistsinArtworks(artwork, catalog["artists"])
 
 
@@ -199,6 +206,22 @@ def addArtworkNationality(catalog, nationality, artwork):
     lt.addLast(nacionalidad["artworks"], artwork)
 
 
+def addArtworkDepartment(catalog, department, artwork):
+    """
+    Adiciona una obra a la lista de obras que son de un departamento
+    en especifico
+    """
+    departamentos = catalog["departments"]
+    existDepartment = mp.contains(departamentos, department)
+    if existDepartment:
+        entry = mp.get(departamentos, department)
+        departamento = me.getValue(entry)
+    else:
+        departamento = newDepartment(department)
+        mp.put(departamentos, department, departamento)
+    lt.addLast(departamento["artworks"], artwork)
+
+
 # Funciones para creacion de datos
 
 def newDateAcquired(fecha):
@@ -267,6 +290,24 @@ def newNationality(nationality):
     nacionalidad["nationality"] = nationality
     nacionalidad["artworks"] = lt.newList("SINGLE_LINKED")
     return nacionalidad
+
+
+def newDepartment(department):
+    """
+    Crea una nueva estructura para modelar los departamentos de una obra
+    """
+    dept = {"department": "",
+            "artworks": None}
+    dept["department"] = department
+    dept["artworks"] = lt.newList("SINGLE_LINKED")
+    return dept
+
+
+def newCosts(artwork, costs):
+    """
+    Adiciona los costos de transporte a la obra dada por parametro
+    """
+    artwork["TransCost"] = costs
 
 
 def newBonusInfo(artist, obras, tecnicas, topMedium):
@@ -399,10 +440,33 @@ def getArworksbyNationality(catalog):
     nationalityName = mp.keySet(catalog['nationalities'])
     for nationality in lt.iterator(nationalityName):
         nacionalidad = mp.get(catalog["nationalities"], nationality)
-        lt.addLast(lista_xd,me.getValue(nacionalidad))
+        lt.addLast(lista_xd, me.getValue(nacionalidad))
     return lista_xd
-        
-        
+
+
+def artworksDepartment(catalog, departamento):
+    """
+    Obtiene todas las obras que estan ligadas a un departamento, el costo
+    para cada obra, y el costo y peso total del departamento
+    """
+    mapDepartment = catalog["departments"]
+    pareja = mp.get(mapDepartment, departamento)
+    obras = pareja["value"]["artworks"]
+    costoDpta = 0
+    kgDpta = 0
+    for artwork in lt.iterator(obras):
+        costoArea = 0
+        costoVolumen = 0
+        if artwork["Weight (kg)"] == "":
+            costokg = 0
+        else:
+            costokg = float(artwork["Weight (kg)"]) * 72
+            kgDpta += float(artwork["Weight (kg)"])
+
+        costoTotal = max(costokg, costoArea, costoVolumen)
+        newCosts(artwork, round(costoTotal, 3))
+        costoDpta += costoTotal
+    return obras, costoDpta, kgDpta
 
 
 def getArtistByDate(catalog, anio1, anio2):
@@ -614,6 +678,20 @@ def compareNationality(keyname, nationality):
     if (keyname == nationalityEntry):
         return 0
     elif (keyname > nationalityEntry):
+        return 1
+    else:
+        return -1
+
+
+def compareDepartment(keyname, department):
+    """
+    Compara dos departamentos. El primero es una cadena de caracteres y el
+    segundo un entry de un map
+    """
+    departmentEntry = me.getKey(department)
+    if (keyname == departmentEntry):
+        return 0
+    elif (keyname > departmentEntry):
         return 1
     else:
         return -1

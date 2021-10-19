@@ -27,7 +27,6 @@ import sys
 import controller
 from DISClib.ADT import list as lt
 from DISClib.ADT import map as mp
-from DISClib.Algorithms.Sorting import mergesort as ms
 assert cf
 
 """
@@ -184,6 +183,25 @@ def printArtistArtworks(obras, nombre, constituentID, tecnicas):
     print(tableObras)
 
 
+def printNationalities(ultimos, primeros):
+    """
+    Imprime los datos requeridos para el requerimiento 4
+    """
+    tbNat = PrettyTable(["Titulo", "Artista(s)", "Fecha", "Medio",
+                         "Dimensiones"])
+    for artwork in lt.iterator(ultimos):
+        tbNat.add_row([artwork["Title"], artwork["NombresArtistas"],
+                       artwork["Date"], artwork["Medium"],
+                       artwork["Dimensions"]])
+    for artwork in lt.iterator(primeros):
+        tbNat.add_row([artwork["Title"], artwork["NombresArtistas"],
+                       artwork["Date"], artwork["Medium"],
+                       artwork["Dimensions"]])
+    tbNat.max_width = 40
+    tbNat.hrules = ALL
+    print(tbNat)
+
+
 def printBonusArtist(rangeArtists, anio1, anio2, total, cantidad, first, lt1):
     """
     Imprime los datos requeridos para el requerimiento 6
@@ -239,9 +257,6 @@ def printMenu():
     print("5 - Req 5. Transportar obras de un departamento")
     print("6 - Bono. Encontrar los artistas mas prolificos del museo")
     print("7 - Salir de la aplicación")
-    print("-"*62)
-
-    print("9 - Contar las obras de una nacionalidad")
     print("-"*62)
 
 
@@ -330,10 +345,64 @@ while True:
         printArtistArtworks(obras["artworks"], nombre, constituentID, tecnicas)
 
     elif int(inputs[0]) == 4:
-        pass
+        Ultimos_3 = lt.newList('ARRAY_LIST')
+        Primeros_3 = lt.newList('ARRAY_LIST')
+        print("\n" + "-"*23 + " Req 4. Inputs " + "-"*24)
+        print("Ranking countries by their number of artworks in the MoMA...")
+        lista_cantidad = lt.newList('ARRAY_LIST')
+        natDict = controller.getArworksbyNationality(catalog)
+        for n in lt.iterator(natDict):
+            cantidad = (lt.size(n["artworks"]))
+            lt.addLast(lista_cantidad, cantidad)
+        lista_cantidad['elements'].sort(reverse=True)
+        print("\n" + "-"*23 + " Req 4. Answer " + "-"*24)
+        contador = 0
+        print("The TOP 10 Countries in the MoMA are:")
+        for n in lt.iterator(lista_cantidad):
+            for n2 in lt.iterator(natDict):
+                if n == lt.size(n2['artworks']) and contador < 10:
+                    print('La nacionalidad ' + str(n2['nationality'])
+                          + ' tiene ' + str(n) + ' obra.')
+                    contador += 1
+        for xd in lt.iterator(natDict):
+            if lt.firstElement(lista_cantidad) == lt.size(xd["artworks"]):
+                ct = 0
+                unique = 1
+                for i in range(1, lt.size(xd["artworks"])):
+                    a = lt.getElement(xd['artworks'], i+1)
+                    b = lt.getElement(xd['artworks'], i)
+                    if a != b and ct < 3:
+                        first = lt.getElement(xd['artworks'], i)
+                        lt.addLast(Primeros_3, first)
+                        ct += 1
+                    if a != b:
+                        unique += 1
+                ctn = 0
+                for j in reversed(range(1, (lt.size(xd["artworks"])+1))):
+                    c = lt.getElement(xd['artworks'], j-1)
+                    d = lt.getElement(xd['artworks'], j)
+                    if c != d and ctn < 3:
+                        last = lt.getElement(xd['artworks'], j)
+                        lt.addLast(Ultimos_3, last)
+                        ctn += 1
+                print("\n" + 'The TOP nationality in the museum is '
+                      + xd['nationality'] + ' with ' + str(unique)
+                      + ' pieces of art.')
+        print('The first and last 3 objects in the '
+              + xd['nationality'] + ' artwork list are: ')
+        printNationalities(Ultimos_3, Primeros_3)
 
     elif int(inputs[0]) == 5:
-        pass
+        print("\n" + "-"*23 + " Req 5. Inputs " + "-"*24)
+        departamento = str(input("Indique el departamento a transportar: "))
+        start_time = time.process_time()
+        #
+        tpDepartamento = controller.artworksDepartment(catalog, departamento)
+        print(tpDepartamento[1])
+        #
+        stop_time = time.process_time()
+        elapsed_time_mseg = round((stop_time - start_time)*1000, 2)
+        print("Tiempo:", elapsed_time_mseg, "mseg")
 
     elif int(inputs[0]) == 6:
         print("\n" + "-"*23 + " Req 6. Inputs " + "-"*24)
@@ -349,7 +418,6 @@ while True:
         cantidad = int(input("Indique la cantidad de autores que desea conocer"
                              ", menor o igual a " + str(ltArtSize) + ": "))
         start_time2 = time.process_time()
-
         rangeArtist = controller.getprolificArtist(catalog, artists, ltArtSize)
         first = lt.getElement(rangeArtist, 1)
         nombre = first["DisplayName"]
@@ -361,48 +429,6 @@ while True:
         printBonusArtist(rangeArtist, anio1, anio2, ltArtSize, cantidad, first,
                          obras["artworks"])
 
-    
-    elif int(inputs[0]) == 9:
-        Ultimos_3 = lt.newList('ARRAY_LIST')
-        Primeros_3 = lt.newList('ARRAY_LIST')
-        print("\n" + "-"*23 + " Req n. Inputs " + "-"*24)
-        lista_cantidad = lt.newList('ARRAY_LIST')
-        natDict = controller.getArworksbyNationality(catalog)
-        for n in lt.iterator(natDict):
-            cantidad = (lt.size(n["artworks"]))
-            lt.addLast(lista_cantidad,cantidad)
-        lista_cantidad['elements'].sort(reverse=True)
-        for n in lt.iterator(lista_cantidad):
-            for n2 in lt.iterator(natDict):
-                if n == lt.size(n2['artworks']):
-                    print('La nacionalidad ' + str(n2['nationality'])+ ' tiene ' +str(n) + ' obra.')
-        for xd in lt.iterator(natDict):
-            if lt.firstElement(lista_cantidad) == lt.size(xd["artworks"]):
-                ct = 0
-                unique = 1
-                print('The first and last 3 objects in the '+ xd['nationality']+' artwork list are: ' )
-                for i in range(1,lt.size(xd["artworks"])):
-                    if lt.getElement(xd['artworks'],i+1)!= lt.getElement(xd['artworks'],i) and ct < 3:
-                       first = lt.getElement(xd['artworks'],i)
-                       lt.addLast(Primeros_3,first)
-                       #print(lt.getElement(xd['artworks'],i))
-                       ct += 1
-                    if lt.getElement(xd['artworks'],i+1)!= lt.getElement(xd['artworks'],i):
-                        unique += 1
-                ctn = 0
-                for j in reversed(range(1,(lt.size(xd["artworks"])+1))):
-                    if lt.getElement(xd['artworks'],j-1)!= lt.getElement(xd['artworks'],j) and ctn < 3:
-                       last = lt.getElement(xd['artworks'],j)
-                       lt.addLast(Ultimos_3,last)
-                       #print(lt.getElement(xd['artworks'],j))
-                       ctn += 1
-                print('The TOP nationality in the museum is '+ xd['nationality'] +' with '+ str(unique)+ ' pieces of art.')
-            
-                    
-                
-                
-                
-                  
     else:
         sys.exit(0)
 sys.exit(0)

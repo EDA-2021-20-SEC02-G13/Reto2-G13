@@ -141,11 +141,19 @@ def getArworksbyNationality(catalog):
     return nationalityInfo
 
 
+def artworksDepartment(catalog, departamento):
+    """
+    Obtiene todas las obras que estan ligadas a un departamento, el costo
+    para cada obra, y el costo y peso total del departamento
+    """
+    return model.artworksDepartment(catalog, departamento)
+
+
 def getArtistByDate(catalog, anio1, anio2):
     """
     Retorna una lista de artistas dado un rango determinado por dos años
     """
-    return model.getArtistByDate(catalog, anio1, anio2, )
+    return model.getArtistByDate(catalog, anio1, anio2)
 
 
 def getprolificArtist(catalog, artists, size):
