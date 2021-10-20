@@ -398,7 +398,7 @@ while True:
         start_time = time.process_time()
         #
         tpDepartamento = controller.artworksDepartment(catalog, departamento)
-        print(tpDepartamento[1])
+        print(tpDepartamento)
         #
         stop_time = time.process_time()
         elapsed_time_mseg = round((stop_time - start_time)*1000, 2)

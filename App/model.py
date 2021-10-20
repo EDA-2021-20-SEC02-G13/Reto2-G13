@@ -24,6 +24,7 @@
  * Dario Correal - Version inicial
  """
 
+from DISClib.DataStructures.arraylist import addLast
 import config as cf
 from DISClib.ADT import list as lt
 from DISClib.ADT import map as mp
@@ -452,6 +453,14 @@ def artworksDepartment(catalog, departamento):
     mapDepartment = catalog["departments"]
     pareja = mp.get(mapDepartment, departamento)
     obras = pareja["value"]["artworks"]
+    Tipo_Medida = lt.newList('ARRAY_LIST')
+    addLast(Tipo_Medida,'Circumference (cm)')
+    addLast(Tipo_Medida,'Depth (cm)')
+    addLast(Tipo_Medida,'Diameter (cm)')
+    addLast(Tipo_Medida,'Height (cm)')
+    addLast(Tipo_Medida,'Length (cm)')
+    addLast(Tipo_Medida,'Width (cm)')
+    addLast(Tipo_Medida,'Seat Height (cm)')
     costoDpta = 0
     kgDpta = 0
     for artwork in lt.iterator(obras):
@@ -462,6 +471,23 @@ def artworksDepartment(catalog, departamento):
         else:
             costokg = float(artwork["Weight (kg)"]) * 72
             kgDpta += float(artwork["Weight (kg)"])
+        for medida in lt.iterator(Tipo_Medida):
+            try:
+                metros = float(artwork[medida])/100
+                artwork[medida] = metros
+            except:
+                metros = 0
+        if artwork['Depth (cm)'] == 0 or '':
+            try:
+                costoArea = float(artwork['Width (cm)'])* float(artwork['Height (cm)']) * 72
+            except:
+                costoArea = 0
+        else:
+            try:
+                costoVolumen = float(artwork['Width (cm)'])* float(artwork['Height (cm)']) * float(artwork['Depth (cm)']) * 72 
+                costoArea   = float(artwork['Width (cm)'])* float(artwork['Height (cm)']) * 72
+            except:
+                costoVolumen = 0
 
         costoTotal = max(costokg, costoArea, costoVolumen)
         newCosts(artwork, round(costoTotal, 3))
