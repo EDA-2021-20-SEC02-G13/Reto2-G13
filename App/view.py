@@ -381,6 +381,7 @@ while True:
         printArtistArtworks(obras["artworks"], nombre, constituentID, tecnicas)
 
     elif int(inputs[0]) == 4:
+        start_time = time.process_time()
         Ultimos_3 = lt.newList('ARRAY_LIST')
         Primeros_3 = lt.newList('ARRAY_LIST')
         print("\n" + "-"*23 + " Req 4. Inputs " + "-"*24)
@@ -391,6 +392,9 @@ while True:
             cantidad = (lt.size(n["artworks"]))
             lt.addLast(lista_cantidad, cantidad)
         lista_cantidad['elements'].sort(reverse=True)
+        stop_time = time.process_time()
+        elapsed_time_mseg = round((stop_time - start_time)*1000, 2)
+        print("Tiempo:", elapsed_time_mseg, "mseg")
         print("\n" + "-"*23 + " Req 4. Answer " + "-"*24)
         contador = 0
         print("The TOP 10 Countries in the MoMA are:")
@@ -432,12 +436,10 @@ while True:
         print("\n" + "-"*23 + " Req 5. Inputs " + "-"*24)
         departamento = str(input("Indique el departamento a transportar: "))
         start_time = time.process_time()
-
         obrasDpta = controller.artworksDepartment(catalog, departamento)
         sizeDpta = lt.size(obrasDpta[0])
         ObrasAntiguas = controller.sortDateArtworks(obrasDpta[0], sizeDpta)
         ObrasCostosas = controller.sortCostArtworks(obrasDpta[0], sizeDpta)
-
         stop_time = time.process_time()
         elapsed_time_mseg = round((stop_time - start_time)*1000, 2)
         print("Tiempo:", elapsed_time_mseg, "mseg")

@@ -24,7 +24,6 @@
  * Dario Correal - Version inicial
  """
 
-from DISClib.DataStructures.arraylist import addLast
 import config as cf
 from DISClib.ADT import list as lt
 from DISClib.ADT import map as mp
@@ -232,7 +231,7 @@ def newDateAcquired(fecha):
     dateAc = {"dateAcquired": "",
               "artworks": None}
     dateAc["dateAcquired"] = fecha
-    dateAc["artworks"] = lt.newList("SINGLE_LINKED")
+    dateAc["artworks"] = lt.newList("ARRAY_LIST")
     return dateAc
 
 
@@ -250,7 +249,7 @@ def newBeginDate(fecha):
     beginDate = {"beginDate": "",
                  "artists": None}
     beginDate["beginDate"] = fecha
-    beginDate["artists"] = lt.newList("SINGLE_LINKED")
+    beginDate["artists"] = lt.newList("ARRAY_LIST")
     return beginDate
 
 
@@ -267,7 +266,7 @@ def newArtistMedium(name, consID):
                                     comparefunction=compareMedium)}
     artista["artist"] = name
     artista["consID"] = consID
-    artista["artworks"] = lt.newList("SINGLE_LINKED")
+    artista["artworks"] = lt.newList("ARRAY_LIST")
     return artista
 
 
@@ -278,7 +277,7 @@ def newMedium(medium):
     tecnica = {"medium": "",
                "artworks": None}
     tecnica["medium"] = medium
-    tecnica["artworks"] = lt.newList("SINGLE_LINKED")
+    tecnica["artworks"] = lt.newList("ARRAY_LIST")
     return tecnica
 
 
@@ -289,7 +288,7 @@ def newNationality(nationality):
     nacionalidad = {"nationality": "",
                     "artworks": None}
     nacionalidad["nationality"] = nationality
-    nacionalidad["artworks"] = lt.newList("SINGLE_LINKED")
+    nacionalidad["artworks"] = lt.newList("ARRAY_LIST")
     return nacionalidad
 
 
@@ -300,7 +299,7 @@ def newDepartment(department):
     dept = {"department": "",
             "artworks": None}
     dept["department"] = department
-    dept["artworks"] = lt.newList("SINGLE_LINKED")
+    dept["artworks"] = lt.newList("ARRAY_LIST")
     return dept
 
 
@@ -453,45 +452,48 @@ def artworksDepartment(catalog, departamento):
     mapDepartment = catalog["departments"]
     pareja = mp.get(mapDepartment, departamento)
     obras = pareja["value"]["artworks"]
-    Tipo_Medida = lt.newList('ARRAY_LIST')
-    addLast(Tipo_Medida,'Circumference (cm)')
-    addLast(Tipo_Medida,'Depth (cm)')
-    addLast(Tipo_Medida,'Diameter (cm)')
-    addLast(Tipo_Medida,'Height (cm)')
-    addLast(Tipo_Medida,'Length (cm)')
-    addLast(Tipo_Medida,'Width (cm)')
-    addLast(Tipo_Medida,'Seat Height (cm)')
     costoDpta = 0
     kgDpta = 0
     for artwork in lt.iterator(obras):
-        costoArea = 0
-        costoVolumen = 0
         if artwork["Weight (kg)"] == "":
             costokg = 0
         else:
             costokg = float(artwork["Weight (kg)"]) * 72
             kgDpta += float(artwork["Weight (kg)"])
-        for medida in lt.iterator(Tipo_Medida):
-            try:
-                metros = float(artwork[medida])/100
-                artwork[medida] = metros
-            except:
-                metros = 0
-                artwork[medida] = metros
-        if artwork['Depth (cm)'] != 0:
-            costoVolumen = artwork["Depth (cm)"] * artwork["Height (cm)"] * artwork["Width (cm)"] * 72
-        elif (artwork["Height (cm)"] and artwork["Width (cm)"]) != 0:
-            costoArea = artwork["Height (cm)"] * artwork["Width (cm)"]* 72
-        elif (artwork['Depth (cm)'] and artwork["Height (cm)"] and artwork["Width (cm)"]) == 0:
-            costoVolumen = 48
-        elif (artwork["Height (cm)"] and artwork["Width (cm)"]) == 0:
-            costoArea = 48
-        
-            
-
-
-
-        costoTotal = max(costokg, costoArea, costoVolumen)
+        costos = lt.newList("ARRAY_LIST")
+        total = 1
+        apoyo = lt.newList("ARRAY_LIST")
+        lt.addLast(apoyo, "0")
+        lt.addLast(apoyo, "")
+        contaDiametro = 0
+        if lt.isPresent(apoyo, artwork["Circumference (cm)"]) == 0:
+            if lt.isPresent(apoyo, artwork["Diameter (cm)"]) == 0:
+                radio = (float(artwork["Circumference (cm)"]))/(2*3.1416)
+                areaC = (3.1416)*(pow(radio, 2))
+                lt.addLast(costos, areaC)
+                contaDiametro = 2
+        if lt.isPresent(apoyo, artwork["Depth (cm)"]) == 0:
+            lt.addLast(costos, artwork["Depth (cm)"])
+        if lt.isPresent(apoyo, artwork["Diameter (cm)"]) == 0:
+            diametro = float(artwork["Diameter (cm)"])
+            areaD = (3.1416*pow(diametro, 2))/4
+            contaDiametro = 2
+            lt.addLast(costos, areaD)
+        if lt.isPresent(apoyo, artwork["Height (cm)"]) == 0:
+            lt.addLast(costos, artwork["Height (cm)"])
+        if lt.isPresent(apoyo, artwork["Length (cm)"]) == 0:
+            lt.addLast(costos, artwork["Length (cm)"])
+        if lt.isPresent(apoyo, artwork["Width (cm)"]) == 0:
+            lt.addLast(costos, artwork["Width (cm)"])
+        if lt.size(costos) == 0:
+            total = 48.00
+        else:
+            contador = 0 + contaDiametro
+            for valor in lt.iterator(costos):
+                total *= float(valor)
+                contador += 1
+            total = (total/(pow(100, contador))) * 72
+        costoTotal = max(costokg, total)
         newCosts(artwork, round(costoTotal, 3))
         costoDpta += costoTotal
     return obras, costoDpta, kgDpta
