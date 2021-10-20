@@ -477,17 +477,19 @@ def artworksDepartment(catalog, departamento):
                 artwork[medida] = metros
             except:
                 metros = 0
-        if artwork['Depth (cm)'] == 0 or '':
-            try:
-                costoArea = float(artwork['Width (cm)'])* float(artwork['Height (cm)']) * 72
-            except:
-                costoArea = 0
-        else:
-            try:
-                costoVolumen = float(artwork['Width (cm)'])* float(artwork['Height (cm)']) * float(artwork['Depth (cm)']) * 72 
-                costoArea   = float(artwork['Width (cm)'])* float(artwork['Height (cm)']) * 72
-            except:
-                costoVolumen = 0
+                artwork[medida] = metros
+        if artwork['Depth (cm)'] != 0:
+            costoVolumen = artwork["Depth (cm)"] * artwork["Height (cm)"] * artwork["Width (cm)"] * 72
+        elif (artwork["Height (cm)"] and artwork["Width (cm)"]) != 0:
+            costoArea = artwork["Height (cm)"] * artwork["Width (cm)"]* 72
+        elif (artwork['Depth (cm)'] and artwork["Height (cm)"] and artwork["Width (cm)"]) == 0:
+            costoVolumen = 48
+        elif (artwork["Height (cm)"] and artwork["Width (cm)"]) == 0:
+            costoArea = 48
+        
+            
+
+
 
         costoTotal = max(costokg, costoArea, costoVolumen)
         newCosts(artwork, round(costoTotal, 3))
