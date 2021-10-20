@@ -597,6 +597,21 @@ def cmpArtistByCant(artist1, artist2):
         return artist1["ArtworkNumber"] > artist2["ArtworkNumber"]
 
 
+def cmpArtworkByTransCost(artwork1, artwork2):
+    """
+    Devuelve verdadero (True) si el "TransCost" de artwork2 es menor que
+    el de artwork1
+    Args:
+        artwork1: informacion de la primera obra que incluye
+                  su valor "TransCost"
+        artwork2: informacion de la segunda obra que incluye
+                  su valor "TransCost"
+    """
+    costo1 = artwork1["TransCost"]
+    costo2 = artwork2["TransCost"]
+    return costo2 < costo1
+
+
 # Funciones de ordenamiento
 
 def sortArtists(artists, sizeArtists):
@@ -636,6 +651,16 @@ def sortArtistArtworks(artists, cantidad):
     sub_list = lt.subList(artists, 1, cantidad)
     sub_list = sub_list.copy()
     sorted_list = ms.sort(sub_list, cmpArtistByCant)
+    return sorted_list
+
+
+def sortCostArtworks(artworks, sizeArtworks):
+    """
+    Ordena las obras por su costo de transporte
+    """
+    sub_list = lt.subList(artworks, 1, sizeArtworks)
+    sub_list = sub_list.copy()
+    sorted_list = ms.sort(sub_list, cmpArtworkByTransCost)
     return sorted_list
 
 

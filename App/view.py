@@ -202,6 +202,42 @@ def printNationalities(ultimos, primeros):
     print(tbNat)
 
 
+def printArtworksCost(obrasAntiguas, obrasCostosas, sizeDpta, costoDpta,
+                      kgDpta, departamento):
+    """
+    Imprime los datos requeridos para el requerimiento 5
+    """
+    tableYear = PrettyTable(["Titulo", "Artista(s)", "Clasificación", "Fecha",
+                             "Medio", "Dimensiones", "Costo del transporte"])
+    tableCost = PrettyTable(["Titulo", "Artista(s)", "Clasificación", "Fecha",
+                             "Medio", "Dimensiones", "Costo del transporte"])
+    for pos in range(1, 6):
+        artwork = lt.getElement(obrasAntiguas, pos)
+        tableYear.add_row([artwork["Title"], artwork["NombresArtistas"],
+                           artwork["Classification"], artwork["Date"],
+                           artwork["Medium"], artwork["Dimensions"],
+                           artwork["TransCost"]])
+    tableYear.max_width = 40
+    tableYear.hrules = ALL
+    for pos in range(1, 6):
+        artwork = lt.getElement(obrasCostosas, pos)
+        tableCost.add_row([artwork["Title"], artwork["NombresArtistas"],
+                           artwork["Classification"], artwork["Date"],
+                           artwork["Medium"], artwork["Dimensions"],
+                           artwork["TransCost"]])
+    tableCost.max_width = 40
+    tableCost.hrules = ALL
+    print("\n" + "-"*23 + " Req 5. Answer " + "-"*23)
+    print("El MoMA va a transportar " + str(sizeDpta) + " obras del "
+          "departamento " + departamento)
+    print("\n" + "Peso estimado del cargamento (kg): " + str(kgDpta))
+    print("Costo estimado del cargamento (USD): " + str(round(costoDpta, 2)))
+    print("\n" + "El TOP 5 de obras mas costosas para transportar es:")
+    print(tableCost)
+    print("\n" + "El TOP 5 de obras mas viejas para transportar es:")
+    print(tableYear)
+
+
 def printBonusArtist(rangeArtists, anio1, anio2, total, cantidad, first, lt1):
     """
     Imprime los datos requeridos para el requerimiento 6
@@ -396,13 +432,17 @@ while True:
         print("\n" + "-"*23 + " Req 5. Inputs " + "-"*24)
         departamento = str(input("Indique el departamento a transportar: "))
         start_time = time.process_time()
-        #
-        tpDepartamento = controller.artworksDepartment(catalog, departamento)
-        print(tpDepartamento[1])
-        #
+
+        obrasDpta = controller.artworksDepartment(catalog, departamento)
+        sizeDpta = lt.size(obrasDpta[0])
+        ObrasAntiguas = controller.sortDateArtworks(obrasDpta[0], sizeDpta)
+        ObrasCostosas = controller.sortCostArtworks(obrasDpta[0], sizeDpta)
+
         stop_time = time.process_time()
         elapsed_time_mseg = round((stop_time - start_time)*1000, 2)
         print("Tiempo:", elapsed_time_mseg, "mseg")
+        printArtworksCost(ObrasAntiguas, ObrasCostosas, sizeDpta,
+                          obrasDpta[1], obrasDpta[2], departamento)
 
     elif int(inputs[0]) == 6:
         print("\n" + "-"*23 + " Req 6. Inputs " + "-"*24)

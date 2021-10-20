@@ -100,6 +100,13 @@ def sortDateArtworks(artworks, sizeArtworks):
     return model.sortDateArtworks(artworks, sizeArtworks)
 
 
+def sortCostArtworks(artworks, sizeArtworks):
+    """
+    Ordena las obras por su costo de transporte
+    """
+    return model.sortCostArtworks(artworks, sizeArtworks)
+
+
 # Funciones de consulta sobre el catálogo
 
 def artworksRange(catalog, fecha1, fecha2):
