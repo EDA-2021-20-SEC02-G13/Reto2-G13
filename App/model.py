@@ -51,9 +51,9 @@ def newCatalog():
                "nationalities": None,
                "departments": None}
 
-    catalog["artists"] = lt.newList("SINGLE_LINKED")
+    catalog["artists"] = lt.newList("ARRAY_LIST")
 
-    catalog["artworks"] = lt.newList("SINGLE_LINKED")
+    catalog["artworks"] = lt.newList("ARRAY_LIST")
 
     catalog["dates"] = mp.newMap(235,
                                  maptype="PROBING",
